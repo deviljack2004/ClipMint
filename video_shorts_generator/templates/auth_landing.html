@@ -452,6 +452,15 @@
     loginTabBtn.addEventListener('click', () => setTab('login'));
     registerTabBtn.addEventListener('click', () => setTab('register'));
 
+    async function parseApiResponse(res) {
+      const raw = await res.text();
+      try {
+        return raw ? JSON.parse(raw) : {};
+      } catch (_) {
+        return { detail: raw || `Request failed with status ${res.status}` };
+      }
+    }
+
     sendOtpBtn.addEventListener('click', async () => {
       const email = String(registerEmail.value || '').trim();
       if (!email) {
@@ -463,7 +472,7 @@
       fd.append('email', email);
       try {
         const res = await fetch('/api/auth/request-otp', { method: 'POST', body: fd });
-        const data = await res.json();
+        const data = await parseApiResponse(res);
         if (!res.ok) throw new Error(data.detail || 'Unable to send OTP.');
         setStatus(data.message || 'OTP sent.', 'ok');
       } catch (err) {
@@ -481,7 +490,7 @@
       fd.append('otp_code', String(registerOtp.value || '').trim());
       try {
         const res = await fetch('/api/auth/register', { method: 'POST', body: fd });
-        const data = await res.json();
+        const data = await parseApiResponse(res);
         if (!res.ok) throw new Error(data.detail || 'Registration failed.');
         setStatus('Registration successful. Please login now.', 'ok');
         loginIdentifier.value = String(registerEmail.value || '').trim();
@@ -500,7 +509,7 @@
       fd.append('password', String(loginPassword.value || ''));
       try {
         const res = await fetch('/api/auth/login', { method: 'POST', body: fd });
-        const data = await res.json();
+        const data = await parseApiResponse(res);
         if (!res.ok) throw new Error(data.detail || 'Login failed.');
         window.location.href = '/app';
       } catch (err) {

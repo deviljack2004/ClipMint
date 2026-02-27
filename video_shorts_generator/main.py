@@ -2127,11 +2127,21 @@ async def auth_request_otp(email: str = Form(...)) -> JSONResponse:
             conn.commit()
         finally:
             conn.close()
-    email_sent = _send_otp_email(clean_email, code)
+    email_sent = False
+    smtp_error = ""
+    try:
+        email_sent = _send_otp_email(clean_email, code)
+    except Exception as exc:  # noqa: BLE001
+        smtp_error = str(exc) or "Unknown SMTP error."
+        print(f"[AUTH] OTP email delivery failed for {clean_email}: {smtp_error}")
     return JSONResponse(
         {
             "ok": True,
-            "message": "OTP sent to your email." if email_sent else "OTP generated. SMTP not configured; check server console.",
+            "message": (
+                "OTP sent to your email."
+                if email_sent
+                else ("OTP generated. Email delivery failed; check server console." if smtp_error else "OTP generated. SMTP not configured; check server console.")
+            ),
             "email": clean_email,
         }
     )
