@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipMint Auth</title>
+  <style>
+    :root {
+      --bg0: #08122a;
+      --bg1: #122650;
+      --bg2: #1e3a72;
+      --glass: rgba(210, 232, 255, 0.14);
+      --glass-strong: rgba(230, 244, 255, 0.22);
+      --edge: rgba(165, 210, 255, 0.5);
+      --text: #f2f8ff;
+      --muted: #b3c8e8;
+      --primary: #79c5ff;
+      --primary-2: #9bdeff;
+      --ok: #67f2b8;
+      --bad: #ff8da6;
+      --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cdefs%3E%3CradialGradient id='g' cx='45%25' cy='35%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='0.72'/%3E%3Cstop offset='0.55' stop-color='%23b9dcff' stop-opacity='0.42'/%3E%3Cstop offset='1' stop-color='%2388bfff' stop-opacity='0.18'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='17' cy='17' r='10.5' fill='url(%23g)' stroke='%23d7ecff' stroke-opacity='0.72'/%3E%3Ccircle cx='13.5' cy='13' r='2.2' fill='%23ffffff' fill-opacity='0.78'/%3E%3C/svg%3E") 17 17, auto;
+      --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cdefs%3E%3CradialGradient id='gp' cx='45%25' cy='35%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='0.82'/%3E%3Cstop offset='0.55' stop-color='%23cde8ff' stop-opacity='0.55'/%3E%3Cstop offset='1' stop-color='%2398c9ff' stop-opacity='0.24'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='17' cy='17' r='11.5' fill='url(%23gp)' stroke='%23e6f4ff' stroke-opacity='0.86'/%3E%3Cpath d='M17 7.7L19.7 13.3L25.8 14.1L21.3 18.4L22.4 24.5L17 21.6L11.6 24.5L12.7 18.4L8.2 14.1L14.3 13.3Z' fill='%23ffffff' fill-opacity='0.8'/%3E%3C/svg%3E") 17 17, pointer;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: Bahnschrift, "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 14%, rgba(123, 204, 255, 0.32), transparent 28%),
+        radial-gradient(circle at 88% 8%, rgba(149, 176, 255, 0.3), transparent 30%),
+        radial-gradient(circle at 70% 82%, rgba(88, 173, 255, 0.2), transparent 32%),
+        linear-gradient(135deg, var(--bg0), var(--bg1) 48%, var(--bg2));
+      overflow: hidden;
+      cursor: var(--cursor-default);
+    }
+    button, a, input, .tab-btn, .btn {
+      cursor: var(--cursor-pointer);
+    }
+
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .ambient::before {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridDrift 16s linear infinite;
+      opacity: 0.24;
+    }
+    .blob {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(16px);
+      opacity: 0.35;
+      animation: float 9s ease-in-out infinite;
+    }
+    .blob.b1 { width: 280px; height: 280px; background: #7fceff; top: -80px; left: -60px; }
+    .blob.b2 { width: 360px; height: 360px; background: #7da6ff; right: -120px; top: 20%; animation-delay: 1.2s; }
+    .blob.b3 { width: 240px; height: 240px; background: #6ee6ff; bottom: -90px; left: 28%; animation-delay: 2.1s; }
+    .ring {
+      position: absolute;
+      border-radius: 999px;
+      border: 1px solid rgba(183, 226, 255, 0.4);
+      box-shadow: 0 0 24px rgba(124, 204, 255, 0.2);
+      animation: spin 14s linear infinite;
+    }
+    .ring.r1 { width: 280px; height: 280px; right: 14%; bottom: -80px; }
+    .ring.r2 { width: 190px; height: 190px; left: 22%; top: -60px; animation-duration: 10s; animation-direction: reverse; }
+    .spark {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #e8f8ff, rgba(122, 205, 255, 0.2));
+      box-shadow: 0 0 12px rgba(161, 222, 255, 0.55);
+      animation: twinkle 2.6s ease-in-out infinite;
+    }
+    .spark.s1 { top: 26%; left: 18%; }
+    .spark.s2 { top: 64%; right: 20%; animation-delay: 0.8s; }
+    .spark.s3 { top: 40%; right: 36%; animation-delay: 1.5s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(-18px) translateX(12px); }
+    }
+    @keyframes gridDrift {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-48px, -48px, 0); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes twinkle {
+      0%, 100% { transform: scale(0.85); opacity: 0.45; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .page {
+      height: 100%;
+      display: grid;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .shell {
+      width: min(1220px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 16px;
+    }
+
+    .hero {
+      border: 1px solid var(--edge);
+      border-radius: 24px;
+      background: linear-gradient(165deg, rgba(173, 221, 255, 0.2), rgba(112, 171, 247, 0.12));
+      backdrop-filter: blur(14px) saturate(145%);
+      -webkit-backdrop-filter: blur(14px) saturate(145%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.34), 0 30px 50px rgba(2, 8, 20, 0.45);
+      padding: 26px;
+      animation: enterLeft 0.8s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: -120% 40% auto -60%;
+      height: 300%;
+      background: linear-gradient(120deg, rgba(255,255,255,0) 36%, rgba(216, 242, 255, 0.18) 50%, rgba(255,255,255,0) 63%);
+      transform: rotate(8deg);
+      animation: sheen 6.2s linear infinite;
+      pointer-events: none;
+    }
+    .eyebrow {
+      display: inline-block;
+      border-radius: 999px;
+      border: 1px solid rgba(188, 223, 255, 0.5);
+      background: rgba(219, 240, 255, 0.15);
+      color: #eaf6ff;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      animation: pulseGlow 2.2s ease-in-out infinite;
+    }
+    .hero h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-family: "Consolas", monospace;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 58ch;
+    }
+    .stats {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      border: 1px solid rgba(173, 217, 255, 0.36);
+      border-radius: 14px;
+      background: rgba(210, 233, 255, 0.12);
+      padding: 10px;
+      animation: rise 0.65s ease both;
+    }
+    .stat:nth-child(2) { animation-delay: 0.08s; }
+    .stat:nth-child(3) { animation-delay: 0.14s; }
+    .stat .n { font-size: 1.25rem; font-weight: 700; }
+    .stat .l { color: var(--muted); font-size: 0.84rem; }
+
+    .feature-grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .feature {
+      border-radius: 14px;
+      border: 1px solid rgba(170, 214, 255, 0.35);
+      background: linear-gradient(180deg, rgba(213, 237, 255, 0.16), rgba(151, 199, 252, 0.08));
+      padding: 12px;
+      animation: rise 0.65s ease both;
+    }
+    .feature:nth-child(2) { animation-delay: 0.06s; }
+    .feature:nth-child(3) { animation-delay: 0.12s; }
+    .feature:nth-child(4) { animation-delay: 0.18s; }
+    .feature h3 { margin: 0 0 6px; font-size: 0.95rem; letter-spacing: 0.04em; }
+    .feature p { margin: 0; color: var(--muted); font-size: 0.84rem; line-height: 1.35; }
+
+    .trust {
+      margin-top: 14px;
+      border: 1px solid rgba(178, 218, 255, 0.34);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(214, 237, 255, 0.1);
+      color: #dceeff;
+      font-size: 0.83rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .auth-panel {
+      border: 1px solid var(--edge);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(226, 243, 255, 0.2), rgba(169, 206, 248, 0.12));
+      backdrop-filter: blur(15px) saturate(150%);
+      -webkit-backdrop-filter: blur(15px) saturate(150%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 28px 42px rgba(3, 10, 24, 0.42);
+      padding: 20px;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      animation: enterRight 0.8s ease;
+    }
+
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tab-btn {
+      min-height: 42px;
+      border-radius: 999px;
+      border: 1px solid rgba(177, 217, 255, 0.5);
+      background: linear-gradient(180deg, rgba(221, 240, 255, 0.22), rgba(154, 201, 248, 0.14));
+      color: #ebf7ff;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tab-btn:hover { transform: translateY(-1px); }
+    .tab-btn.active {
+      background: linear-gradient(180deg, rgba(145, 216, 255, 0.5), rgba(110, 182, 242, 0.36));
+      box-shadow: 0 10px 20px rgba(53, 128, 196, 0.35), inset 0 1px 0 rgba(255,255,255,0.55);
+      color: #09294e;
+    }
+
+    .card {
+      border: 1px solid rgba(179, 220, 255, 0.45);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(224, 242, 255, 0.2), rgba(155, 198, 244, 0.12));
+      padding: 14px;
+      display: none;
+      gap: 8px;
+      animation: fadeIn 0.25s ease;
+    }
+    .card.active { display: grid; }
+
+    label { color: #d6e9ff; font-size: 0.9rem; }
+    input {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(168, 210, 255, 0.5);
+      background: rgba(212, 233, 255, 0.12);
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+    }
+    input::placeholder { color: #b8cceb; }
+    input:focus {
+      border-color: rgba(171, 221, 255, 0.9);
+      box-shadow: 0 0 0 3px rgba(121, 197, 255, 0.22);
+    }
+
+    .row { display: grid; gap: 8px; grid-template-columns: 1fr auto; }
+    .btn {
+      min-height: 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(162, 220, 255, 0.65);
+      background: linear-gradient(180deg, rgba(136, 206, 255, 0.7), rgba(87, 170, 236, 0.62));
+      color: #0a2f59;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 0 14px;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 18px rgba(16, 72, 128, 0.32);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.secondary {
+      background: linear-gradient(180deg, rgba(210, 230, 255, 0.55), rgba(157, 194, 238, 0.4));
+      border-color: rgba(170, 203, 241, 0.6);
+      color: #dff2ff;
+    }
+
+    .status {
+      min-height: 22px;
+      font-size: 0.92rem;
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px dashed rgba(177, 212, 245, 0.35);
+      background: rgba(202, 228, 255, 0.08);
+    }
+    .status.ok { color: var(--ok); border-color: rgba(103, 242, 184, 0.45); }
+    .status.bad { color: var(--bad); border-color: rgba(255, 141, 166, 0.45); }
+
+    @keyframes enterLeft { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes enterRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes sheen {
+      from { transform: translateX(-28%) rotate(8deg); }
+      to { transform: translateX(132%) rotate(8deg); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 rgba(142, 214, 255, 0); }
+      50% { box-shadow: 0 0 18px rgba(142, 214, 255, 0.35); }
+    }
+
+    @media (max-width: 1040px) {
+      .shell { grid-template-columns: 1fr; }
+      .hero { order: 2; }
+      .auth-panel { order: 1; }
+      body { overflow: auto; }
+    }
+    @media (max-width: 680px) {
+      .page { padding: 12px; }
+      .hero, .auth-panel { border-radius: 18px; padding: 16px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .trust { font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+    <span class="ring r1"></span>
+    <span class="ring r2"></span>
+    <span class="spark s1"></span>
+    <span class="spark s2"></span>
+    <span class="spark s3"></span>
+  </div>
+
+  <main class="page">
+    <div class="shell">
+      <section class="hero">
+        <span class="eyebrow">Creative Automation Platform</span>
+        <h1>ClipMint Studio</h1>
+        <p>Turn long videos into social-ready shorts, merge cinematic layouts, and download source media fast. Designed for creators who publish every day.</p>
+
+        <div class="stats">
+          <article class="stat"><div class="n">3</div><div class="l">Core Tools</div></article>
+          <article class="stat"><div class="n">OTP</div><div class="l">Secure Signup</div></article>
+          <article class="stat"><div class="n">24/7</div><div class="l">Workflow Ready</div></article>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature"><h3>Shorts Generator</h3><p>Auto-segment long videos with reusable timeline memory.</p></article>
+          <article class="feature"><h3>Video Merging</h3><p>Dual-video composition with drag editor and audio blend control.</p></article>
+          <article class="feature"><h3>Downloader</h3><p>Fetch MP4/MP3 from supported links with saved download memory.</p></article>
+          <article class="feature"><h3>Fast Control</h3><p>One dashboard for generate, refine, and publish operations.</p></article>
+        </div>
+
+        <div class="trust">
+          <span>Email OTP Verification</span>
+          <span>Session-Based Access</span>
+          <span>Creator-Focused UI</span>
+        </div>
+      </section>
+
+      <section class="auth-panel">
+        <div class="tabs">
+          <button id="loginTabBtn" class="tab-btn active" type="button">Login</button>
+          <button id="registerTabBtn" class="tab-btn" type="button">Register</button>
+        </div>
+
+        <form id="loginCard" class="card active">
+          <label for="loginIdentifier">Username or Email</label>
+          <input id="loginIdentifier" type="text" placeholder="yourusername or you@example.com" required />
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" placeholder="Enter password" required />
+          <button class="btn" type="submit">Login</button>
+        </form>
+
+        <form id="registerCard" class="card">
+          <label for="registerEmail">Email</label>
+          <div class="row">
+            <input id="registerEmail" type="email" placeholder="you@example.com" required />
+            <button id="sendOtpBtn" class="btn secondary" type="button">Send OTP</button>
+          </div>
+          <label for="registerUsername">Username</label>
+          <input id="registerUsername" type="text" placeholder="Choose username" required />
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" type="password" placeholder="Minimum 8 characters" required />
+          <label for="registerOtp">OTP</label>
+          <input id="registerOtp" type="text" maxlength="6" placeholder="Enter 6-digit OTP" required />
+          <button class="btn" type="submit">Register</button>
+        </form>
+
+        <div id="statusText" class="status"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const initialTab = "{{ initial_tab }}";
+    const loginTabBtn = document.getElementById('loginTabBtn');
+    const registerTabBtn = document.getElementById('registerTabBtn');
+    const loginCard = document.getElementById('loginCard');
+    const registerCard = document.getElementById('registerCard');
+    const statusText = document.getElementById('statusText');
+
+    const loginIdentifier = document.getElementById('loginIdentifier');
+    const loginPassword = document.getElementById('loginPassword');
+
+    const registerEmail = document.getElementById('registerEmail');
+    const registerUsername = document.getElementById('registerUsername');
+    const registerPassword = document.getElementById('registerPassword');
+    const registerOtp = document.getElementById('registerOtp');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+
+    function setStatus(msg, kind = '') {
+      statusText.className = `status ${kind}`.trim();
+      statusText.textContent = msg || '';
+    }
+
+    function setTab(name) {
+      const isLogin = name !== 'register';
+      loginTabBtn.classList.toggle('active', isLogin);
+      registerTabBtn.classList.toggle('active', !isLogin);
+      loginCard.classList.toggle('active', isLogin);
+      registerCard.classList.toggle('active', !isLogin);
+      history.replaceState({}, '', isLogin ? '/login' : '/register');
+      setStatus('');
+    }
+
+    loginTabBtn.addEventListener('click', () => setTab('login'));
+    registerTabBtn.addEventListener('click', () => setTab('register'));
+
+    sendOtpBtn.addEventListener('click', async () => {
+      const email = String(registerEmail.value || '').trim();
+      if (!email) {
+        setStatus('Enter email first.', 'bad');
+        return;
+      }
+      setStatus('Sending OTP...');
+      const fd = new FormData();
+      fd.append('email', email);
+      try {
+        const res = await fetch('/api/auth/request-otp', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Unable to send OTP.');
+        setStatus(data.message || 'OTP sent.', 'ok');
+      } catch (err) {
+        setStatus(err.message || 'Unable to send OTP.', 'bad');
+      }
+    });
+
+    registerCard.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setStatus('Creating account...');
+      const fd = new FormData();
+      fd.append('email', String(registerEmail.value || '').trim());
+      fd.append('username', String(registerUsername.value || '').trim());
+      fd.append('password', String(registerPassword.value || ''));
+      fd.append('otp_code', String(registerOtp.value || '').trim());
+      try {
+        const res = await fetch('/api/auth/register', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Registration failed.');
+        setStatus('Registration successful. Please login now.', 'ok');
+        loginIdentifier.value = String(registerEmail.value || '').trim();
+        loginPassword.value = '';
+        setTab('login');
+      } catch (err) {
+        setStatus(err.message || 'Registration failed.', 'bad');
+      }
+    });
+
+    loginCard.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setStatus('Logging in...');
+      const fd = new FormData();
+      fd.append('identifier', String(loginIdentifier.value || '').trim());
+      fd.append('password', String(loginPassword.value || ''));
+      try {
+        const res = await fetch('/api/auth/login', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Login failed.');
+        window.location.href = '/app';
+      } catch (err) {
+        setStatus(err.message || 'Login failed.', 'bad');
+      }
+    });
+
+    setTab(initialTab === 'register' ? 'register' : 'login');
+  </script>
+</body>
+</html>

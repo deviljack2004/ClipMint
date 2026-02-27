@@ -1,0 +1,3575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Video Shorts Generator</title>
+  <style>
+    :root {
+      --bg-0: #dbe4f2;
+      --bg-1: #c9d5e8;
+      --panel: rgba(242, 247, 255, 0.9);
+      --panel-edge: rgba(117, 140, 177, 0.42);
+      --text: #1b2a42;
+      --muted: #5a6f93;
+      --cyan: #6bb7ff;
+      --magenta: #86a1ff;
+      --lime: #39bb7e;
+      --warn: #f2b24f;
+      --error: #de5c75;
+      --track: #d0ddf0;
+      --shadow: 0 14px 26px rgba(61, 84, 120, 0.22);
+      --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cdefs%3E%3CradialGradient id='g' cx='45%25' cy='35%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='0.72'/%3E%3Cstop offset='0.55' stop-color='%23b9dcff' stop-opacity='0.42'/%3E%3Cstop offset='1' stop-color='%2388bfff' stop-opacity='0.18'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='17' cy='17' r='10.5' fill='url(%23g)' stroke='%23d7ecff' stroke-opacity='0.72'/%3E%3Ccircle cx='13.5' cy='13' r='2.2' fill='%23ffffff' fill-opacity='0.78'/%3E%3C/svg%3E") 17 17, auto;
+      --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cdefs%3E%3CradialGradient id='gp' cx='45%25' cy='35%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='0.82'/%3E%3Cstop offset='0.55' stop-color='%23cde8ff' stop-opacity='0.55'/%3E%3Cstop offset='1' stop-color='%2398c9ff' stop-opacity='0.24'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='17' cy='17' r='11.5' fill='url(%23gp)' stroke='%23e6f4ff' stroke-opacity='0.86'/%3E%3Cpath d='M17 7.7L19.7 13.3L25.8 14.1L21.3 18.4L22.4 24.5L17 21.6L11.6 24.5L12.7 18.4L8.2 14.1L14.3 13.3Z' fill='%23ffffff' fill-opacity='0.8'/%3E%3C/svg%3E") 17 17, pointer;
+    }
+
+    * { box-sizing: border-box; }
+    * { scrollbar-width: none; }
+    *::-webkit-scrollbar { width: 0; height: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      margin: 0;
+      font-family: Bahnschrift, "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(133, 170, 227, 0.22), transparent 32%),
+        radial-gradient(circle at 82% 12%, rgba(182, 198, 230, 0.22), transparent 30%),
+        radial-gradient(circle at 70% 78%, rgba(109, 162, 235, 0.14), transparent 38%),
+        linear-gradient(135deg, var(--bg-0), var(--bg-1));
+      min-height: 100vh;
+      padding: 0;
+      cursor: var(--cursor-default);
+    }
+    button,
+    a,
+    summary,
+    [role="button"],
+    .tool-card-btn,
+    .mode-btn,
+    input[type="checkbox"],
+    input[type="file"]::file-selector-button {
+      cursor: var(--cursor-pointer);
+    }
+    .profile-popup-card button,
+    .profile-popup-card .popup-close-icon,
+    .profile-btn {
+      cursor: var(--cursor-pointer) !important;
+    }
+    body.theme-light {
+      --bg-0: #eef3ff;
+      --bg-1: #dae7ff;
+      --panel: rgba(246, 250, 255, 0.9);
+      --panel-edge: rgba(99, 132, 194, 0.45);
+      --text: #0f1f3d;
+      --muted: #4a658e;
+      --track: #cedcf8;
+      --shadow: 0 10px 24px rgba(48, 83, 154, 0.2);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(82, 165, 255, 0.2), transparent 32%),
+        radial-gradient(circle at 82% 12%, rgba(110, 122, 255, 0.16), transparent 30%),
+        linear-gradient(135deg, var(--bg-0), var(--bg-1));
+    }
+
+    .app-shell {
+      width: 100%;
+      margin: 0;
+      display: grid;
+      gap: 14px;
+      height: 100vh;
+      grid-template-rows: auto 1fr;
+    }
+
+    .app-header {
+      width: 100%;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 16px;
+      border-left: 0;
+      border-right: 0;
+      border-radius: 0 !important;
+      border-top: 0;
+      background: linear-gradient(180deg, #f2f7ff, #dce7f7);
+      backdrop-filter: blur(4px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(110, 130, 163, 0.34);
+      overflow: visible;
+      z-index: 120;
+    }
+    .app-header::after { display: none; }
+
+    .header-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .logo-toggle {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(88, 138, 255, 0.4);
+      background: linear-gradient(180deg, #eef5ff, #cfddf2);
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: none;
+      color: var(--text);
+    }
+    .logo-toggle:hover,
+    .logo-toggle:focus-visible {
+      border-color: rgba(0, 232, 255, 0.86);
+      box-shadow: 0 0 14px rgba(0, 232, 255, 0.24);
+    }
+    .logo-default,
+    .logo-dots {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .logo-default { opacity: 1; transform: scale(1); }
+    .logo-dots { opacity: 0; transform: scale(0.82); gap: 4px; }
+    .logo-toggle:hover .logo-default,
+    .logo-toggle:focus-visible .logo-default { opacity: 0; transform: scale(0.72); }
+    .logo-toggle:hover .logo-dots,
+    .logo-toggle:focus-visible .logo-dots { opacity: 1; transform: scale(1); }
+    .logo-dots span {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--text);
+    }
+    .logo-art {
+      width: 28px;
+      height: 28px;
+      display: block;
+    }
+    .header-copy {
+      display: grid;
+      gap: 1px;
+      line-height: 1.1;
+    }
+    .header-copy strong {
+      font-family: Consolas, "Lucida Console", monospace;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 1.02rem;
+    }
+    .header-copy span {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 220;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(88, 138, 255, 0.35);
+      background: linear-gradient(180deg, #eff5ff, #d8e5f7);
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .profile-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid rgba(122, 169, 255, 0.45);
+      background: linear-gradient(180deg, #f5f9ff, #d8e6fb);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      text-transform: uppercase;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 7px 14px rgba(93,118,153,0.24);
+    }
+    .profile-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      object-fit: cover;
+    }
+    .profile-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 180px;
+      border-radius: 12px;
+      border: 1px solid rgba(25, 49, 88, 0.75);
+      background: linear-gradient(180deg, #22365f, #182a4d);
+      padding: 8px;
+      display: grid;
+      gap: 4px;
+      z-index: 340;
+      box-shadow: 0 18px 28px rgba(30, 44, 70, 0.45), inset 0 1px 0 rgba(255,255,255,0.12);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0.16s;
+    }
+    .profile-menu.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0s;
+    }
+    .profile-menu button {
+      min-height: 34px;
+      border-radius: 8px;
+      text-align: left;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      color: #f3f8ff;
+      background: linear-gradient(180deg, #36568f, #2a4677);
+      border: 1px solid rgba(132, 173, 247, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .profile-menu button:hover {
+      background: linear-gradient(180deg, #4a6fb0, #3b5c96);
+      border-color: rgba(173, 204, 255, 0.7);
+    }
+
+    .layout {
+      width: 100%;
+      margin: 0;
+      padding: 0 10px 10px;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      align-items: stretch;
+      gap: 14px;
+      transition: grid-template-columns 0.26s ease;
+      height: 100%;
+      min-height: 0;
+    }
+    .layout.sidebar-collapsed {
+      grid-template-columns: 0 1fr;
+    }
+
+    .panel {
+      border: 1px solid var(--panel-edge);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(245, 250, 255, 0.92), rgba(229, 238, 252, 0.9));
+      backdrop-filter: blur(8px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(120,145,184,0.4), var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .panel::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -100px;
+      top: -100px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255, 47, 179, 0.3), rgba(255, 47, 179, 0));
+      pointer-events: none;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 12px;
+      height: 100%;
+      position: relative;
+      top: 0;
+      transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.26s ease, visibility 0s linear 0s;
+      min-width: 0;
+      overflow: auto;
+      transform: translateX(0);
+      opacity: 1;
+      visibility: visible;
+      will-change: transform, opacity;
+    }
+    .layout.sidebar-collapsed .side-stack {
+      opacity: 0.01;
+      pointer-events: none;
+      transform: translateX(-28px);
+      visibility: hidden;
+      transition: transform 0.28s ease, opacity 0.2s ease, visibility 0s linear 0.28s;
+    }
+    .side { padding: 14px; height: fit-content; }
+    .side.compact .tiny,
+    .side.compact .memory-meter,
+    .side.compact .memory-list {
+      display: none;
+    }
+    .side.compact .tool-nav .tool-card-btn:not(:first-child) {
+      display: none;
+    }
+
+    .main {
+      padding: 24px;
+      overflow: auto;
+      min-height: 0;
+      height: 100%;
+      overscroll-behavior: contain;
+    }
+    .about-section {
+      min-height: 440px;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .about-card {
+      border: 1px solid rgba(88, 138, 255, 0.35);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(8, 12, 30, 0.6);
+    }
+    .about-card h3 {
+      margin: 0 0 6px;
+      font-family: Consolas, monospace;
+      letter-spacing: 0.04em;
+      font-size: 0.95rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3.4vw, 2.5rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(0, 232, 255, 0.5);
+      font-family: Consolas, "Lucida Console", monospace;
+    }
+
+    .tagline { margin: 8px 0 18px; color: var(--muted); line-height: 1.5; }
+    .side h3 { margin: 0 0 8px; font-family: Consolas, monospace; letter-spacing: 0.05em; }
+
+    .memory-meter { margin: 8px 0 10px; }
+    .track {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--track);
+      overflow: hidden;
+      border: 1px solid rgba(110, 134, 199, 0.3);
+    }
+    .fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      box-shadow: 0 0 12px rgba(0, 232, 255, 0.45);
+      transition: width 0.35s ease;
+    }
+
+    .memory-list { display: grid; gap: 8px; }
+    .memory-subcard {
+      margin-top: 12px;
+      border: 1px solid rgba(88, 138, 255, 0.35);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(8, 12, 30, 0.72);
+    }
+    .tool-nav { margin-top: 14px; display: grid; gap: 8px; }
+    .tool-card-btn {
+      width: 100%;
+      min-height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(88, 138, 255, 0.45);
+      background: rgba(8, 12, 30, 0.82);
+      color: var(--text);
+      text-align: left;
+      padding: 10px;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      box-shadow: none;
+    }
+    .tool-card-btn.active {
+      border-color: rgba(0, 232, 255, 0.9);
+      box-shadow: 0 0 14px rgba(0, 232, 255, 0.28);
+      background: rgba(8, 20, 48, 0.9);
+    }
+    .memory-item {
+      border: 1px solid rgba(88, 138, 255, 0.35);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(8, 12, 30, 0.7);
+    }
+    .memory-item.active { border-color: rgba(0, 232, 255, 0.9); box-shadow: 0 0 18px rgba(0, 232, 255, 0.3); }
+    .memory-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .tiny { color: var(--muted); font-size: 0.82rem; line-height: 1.3; }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 200px;
+      align-items: center;
+    }
+    .merge-upload-row {
+      grid-template-columns: 1fr 1fr;
+    }
+    .count-wrap { display: none; margin-top: 10px; }
+    .mode-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .overlay-grid {
+      margin-top: 10px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      align-items: center;
+    }
+    .pos-summary {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .modal-content {
+      width: min(920px, 100%);
+      border: 1px solid rgba(88, 138, 255, 0.45);
+      border-radius: 14px;
+      background: rgba(7, 11, 28, 0.96);
+      padding: 14px;
+    }
+    .editor-wrap {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 14px;
+    }
+    .editor-stage {
+      width: 360px;
+      height: 640px;
+      border: 1px solid rgba(88, 138, 255, 0.55);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(18, 26, 60, 0.9), rgba(8, 12, 30, 0.92));
+      position: relative;
+      overflow: hidden;
+    }
+    .drag-text {
+      position: absolute;
+      user-select: none;
+      cursor: move;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.26);
+      border: 1px dashed rgba(170, 210, 255, 0.35);
+      white-space: nowrap;
+    }
+    .drag-text.active {
+      border-color: rgba(0, 232, 255, 0.9);
+      box-shadow: 0 0 12px rgba(0, 232, 255, 0.35);
+    }
+    .editor-controls {
+      display: grid;
+      gap: 10px;
+    }
+    .ctrl-card {
+      border: 1px solid rgba(88, 138, 255, 0.35);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(10, 17, 42, 0.85);
+    }
+    .xy-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .mode-group {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid rgba(88, 138, 255, 0.5);
+      background: rgba(4, 9, 24, 0.86);
+      box-shadow: inset 0 0 18px rgba(0, 232, 255, 0.08);
+    }
+    .mode-btn {
+      min-height: 34px;
+      border-radius: 999px;
+      border: 0;
+      padding: 0 14px;
+      background: transparent;
+      color: var(--muted);
+      box-shadow: none;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      font-size: 0.86rem;
+    }
+    .mode-btn.active {
+      background: linear-gradient(90deg, rgba(0, 232, 255, 0.18), rgba(255, 47, 179, 0.22));
+      color: var(--text);
+      box-shadow: 0 0 14px rgba(0, 232, 255, 0.22);
+    }
+    .control {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 232, 255, 0.34);
+      background: rgba(3, 7, 20, 0.92);
+      color: var(--text);
+      padding: 9px 11px;
+      outline: none;
+    }
+    input[type="file"]::file-selector-button {
+      border: 0;
+      margin-right: 12px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: linear-gradient(90deg, rgba(0, 232, 255, 0.22), rgba(0, 232, 255, 0.48));
+      color: #03182b;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    input[type="file"]:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      border-color: rgba(255, 75, 110, 0.45);
+    }
+    input[type="file"]:disabled::file-selector-button {
+      cursor: not-allowed;
+      background: linear-gradient(90deg, rgba(128, 128, 128, 0.35), rgba(90, 90, 90, 0.45));
+      color: #d2d2d2;
+    }
+
+    .button-row { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #173256;
+      background: linear-gradient(90deg, var(--cyan), #5bf3ff);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 10px 18px rgba(116, 150, 211, 0.3);
+    }
+    button.secondary {
+      color: #1f0218;
+      background: linear-gradient(90deg, #ff71d0, var(--magenta));
+      box-shadow: 0 0 16px rgba(255, 47, 179, 0.45);
+    }
+    button.warn {
+      color: #2a1c00;
+      background: linear-gradient(90deg, #ffd56a, #ffb000);
+      box-shadow: 0 0 16px rgba(255, 176, 0, 0.45);
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+
+    .auth-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 11000;
+      background: rgba(3, 6, 16, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .auth-card {
+      width: min(430px, 100%);
+      border-radius: 16px;
+      border: 1px solid rgba(88, 138, 255, 0.55);
+      background: linear-gradient(180deg, #1a2a4f, #111c39);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1);
+      padding: 16px;
+    }
+    .auth-title {
+      margin: 0 0 8px;
+      font-family: Consolas, monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .auth-note { margin: 0 0 10px; color: var(--muted); }
+    .auth-row { display: grid; gap: 8px; margin-top: 8px; }
+    .auth-status { margin-top: 10px; color: var(--muted); min-height: 20px; }
+
+    .info-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 20, 36, 0.32);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 12000;
+      padding: 14px;
+    }
+    .info-modal.open { display: flex; }
+    .info-card {
+      width: min(420px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(197, 224, 255, 0.46);
+      background: linear-gradient(145deg, rgba(184, 219, 255, 0.24), rgba(121, 168, 235, 0.12));
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.42),
+        inset 0 -1px 0 rgba(135, 181, 246, 0.15),
+        0 24px 40px rgba(6, 20, 40, 0.38);
+      padding: 16px;
+    }
+    .info-card h3 {
+      margin: 0 0 8px;
+      color: #263d5d;
+      letter-spacing: 0.04em;
+      font-family: Consolas, monospace;
+    }
+    .info-card p {
+      margin: 0 0 12px;
+      color: #51698f;
+      line-height: 1.45;
+    }
+
+    .error {
+      margin-top: 12px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 75, 110, 0.5);
+      background: rgba(64, 8, 25, 0.58);
+      color: #ffdbe4;
+      display: none;
+    }
+    .status {
+      margin-top: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--panel-edge);
+      padding: 14px;
+      background: rgba(4, 9, 24, 0.72);
+      display: none;
+    }
+    .status-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .cards {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      border-radius: 12px;
+      border: 1px solid rgba(75, 115, 222, 0.36);
+      background: linear-gradient(180deg, rgba(10, 19, 44, 0.85), rgba(8, 13, 30, 0.82));
+      padding: 12px;
+    }
+    .card h3 { margin: 0; font-size: 1rem; letter-spacing: 0.05em; font-family: Consolas, monospace; }
+    .meta, .mini-label { color: var(--muted); font-size: 0.86rem; margin-top: 6px; line-height: 1.35; }
+
+    .mini-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--track);
+      border: 1px solid rgba(110, 134, 199, 0.3);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .mini-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      box-shadow: 0 0 12px rgba(0, 232, 255, 0.45);
+      transition: width 0.35s ease;
+    }
+
+    .finalize-wrap { margin-top: 8px; }
+    .finalize-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(157, 174, 218, 0.22);
+      overflow: hidden;
+      border: 1px solid rgba(110, 134, 199, 0.32);
+    }
+    .finalize-fill {
+      height: 100%;
+      width: 46%;
+      background: linear-gradient(90deg, rgba(255, 47, 179, 0.2), rgba(0, 232, 255, 0.95), rgba(255, 47, 179, 0.2));
+      background-size: 220% 100%;
+      animation: finalizeFlow 1.05s linear infinite;
+    }
+    @keyframes finalizeFlow {
+      from { transform: translateX(-130%); }
+      to { transform: translateX(230%); }
+    }
+
+    .skeleton {
+      width: 100%;
+      height: 320px;
+      border-radius: 8px;
+      background: linear-gradient(110deg, rgba(20, 39, 77, 0.8) 8%, rgba(57, 88, 154, 0.8) 18%, rgba(20, 39, 77, 0.8) 33%);
+      background-size: 200% 100%;
+      animation: shimmer 1.25s linear infinite;
+      margin-top: 8px;
+    }
+    @keyframes shimmer { to { background-position-x: -200%; } }
+
+    video {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border-radius: 8px;
+      background: #000;
+      border: 1px solid rgba(0, 232, 255, 0.22);
+      margin-top: 8px;
+    }
+    a { display: inline-block; margin-top: 8px; color: #93f4ff; text-decoration: none; font-weight: 700; }
+    .ok { color: var(--lime); }
+    .warn-tx { color: var(--warn); }
+    .fail { color: var(--error); }
+    .merge-text-row {
+      display: grid;
+      grid-template-columns: 1fr 120px 90px;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .merge-preview {
+      width: min(380px, 100%);
+      height: 676px;
+      border: 1px solid rgba(88, 138, 255, 0.55);
+      border-radius: 12px;
+      background: #060910;
+      position: relative;
+      overflow: hidden;
+    }
+    .merge-box {
+      position: absolute;
+      border: 2px dashed rgba(0, 232, 255, 0.9);
+      background: rgba(0, 232, 255, 0.15);
+      color: #dffcff;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      cursor: move;
+    }
+    .merge-txt {
+      position: absolute;
+      border: 1px dashed rgba(255, 47, 179, 0.9);
+      background: rgba(255, 47, 179, 0.2);
+      padding: 2px 6px;
+      border-radius: 6px;
+      user-select: none;
+      cursor: move;
+      white-space: nowrap;
+    }
+
+    /* Design refresh overrides */
+    :root {
+      --bg-0: #0c1220;
+      --bg-1: #131f37;
+      --panel: rgba(20, 31, 56, 0.92);
+      --panel-edge: rgba(117, 168, 255, 0.36);
+      --text: #eef5ff;
+      --muted: #a9bddf;
+      --cyan: #4ec7ff;
+      --magenta: #7f9dff;
+      --track: #1f2c4b;
+      --shadow: 0 20px 38px rgba(3, 8, 18, 0.42);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 10% 15%, rgba(78, 199, 255, 0.18), transparent 30%),
+        radial-gradient(circle at 92% 8%, rgba(127, 157, 255, 0.2), transparent 32%),
+        linear-gradient(135deg, #0a101b, #172945 48%, #101c33);
+    }
+
+    .panel {
+      border-color: rgba(125, 176, 255, 0.35);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(22, 33, 58, 0.95), rgba(14, 23, 44, 0.95));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 18px 36px rgba(3, 9, 20, 0.42);
+    }
+
+    .app-header {
+      background: linear-gradient(180deg, #15223d, #101a30);
+      border-bottom: 1px solid rgba(95, 141, 218, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      min-height: 56px;
+    }
+
+    .header-copy strong {
+      color: #f0f6ff;
+      font-size: 0.98rem;
+    }
+    .header-copy span {
+      color: #91acd4;
+      font-size: 0.68rem;
+    }
+
+    .logo-toggle {
+      background: linear-gradient(180deg, #20345e, #17294e);
+      border-color: rgba(113, 160, 240, 0.5);
+    }
+
+    .main {
+      border-radius: 14px;
+      border: 1px solid rgba(95, 142, 220, 0.38);
+      background: linear-gradient(180deg, rgba(16, 26, 47, 0.96), rgba(11, 20, 38, 0.96));
+    }
+
+    h1 {
+      text-shadow: none;
+      color: #f2f7ff;
+      letter-spacing: 0.09em;
+    }
+    .tagline { color: #afc3e8; }
+    .tiny, .meta, .mini-label { color: #9eb5dd; }
+
+    .tool-card-btn {
+      border-color: rgba(112, 158, 240, 0.45);
+      background: linear-gradient(180deg, #223a67, #1a2f56);
+      color: #edf4ff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      font-weight: 600;
+    }
+    .tool-card-btn.active {
+      background: linear-gradient(180deg, #3a66ab, #2b4e86);
+      border-color: rgba(156, 194, 255, 0.8);
+      box-shadow: 0 0 0 1px rgba(154, 192, 255, 0.3), 0 8px 18px rgba(35, 64, 108, 0.4);
+    }
+
+    .memory-item,
+    .memory-subcard,
+    .about-card,
+    .card,
+    .ctrl-card {
+      background: linear-gradient(180deg, rgba(31, 47, 80, 0.9), rgba(24, 39, 68, 0.9));
+      border-color: rgba(105, 149, 228, 0.4);
+    }
+
+    .control {
+      border-color: rgba(103, 148, 228, 0.42);
+      background: linear-gradient(180deg, #162949, #11223f);
+      color: #eef5ff;
+    }
+    .control::placeholder { color: #8ca9d7; }
+
+    .mode-group {
+      background: rgba(14, 25, 45, 0.86);
+      border-color: rgba(97, 141, 219, 0.52);
+    }
+    .mode-btn.active {
+      background: linear-gradient(180deg, #365f9f, #2a4d83);
+      color: #f0f6ff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+    }
+
+    button {
+      background: linear-gradient(180deg, #6fd0ff, #45b5f5);
+      color: #06233c;
+      border: 1px solid rgba(118, 187, 255, 0.7);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 10px 20px rgba(40, 107, 170, 0.35);
+    }
+    button.secondary {
+      background: linear-gradient(180deg, #8ea7ff, #6f87e5);
+      color: #091a44;
+      border-color: rgba(161, 181, 255, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 10px 20px rgba(67, 84, 161, 0.36);
+    }
+    button.warn {
+      background: linear-gradient(180deg, #ffd98c, #f1b24f);
+      color: #3b2400;
+      border-color: rgba(255, 206, 120, 0.75);
+    }
+
+    .profile-btn {
+      width: 36px;
+      height: 36px;
+      border-color: rgba(140, 184, 255, 0.72);
+      background: linear-gradient(180deg, #365f9d, #264878);
+      color: #eff6ff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 10px 18px rgba(22, 42, 78, 0.44);
+    }
+
+    .profile-menu {
+      position: fixed;
+      min-width: 220px;
+      border-radius: 14px;
+      border: 1px solid rgba(150, 194, 255, 0.72);
+      background: linear-gradient(180deg, #f7fbff, #e4efff);
+      box-shadow: 0 22px 34px rgba(5, 15, 35, 0.44);
+      z-index: 9999;
+    }
+    .profile-menu button {
+      background: linear-gradient(180deg, #f7fbff, #e7f0ff);
+      border: 1px solid rgba(149, 182, 236, 0.5);
+      color: #223a5e;
+      font-weight: 700;
+    }
+    .profile-menu button:hover {
+      background: linear-gradient(180deg, #dcedff, #c7defe);
+      color: #16385e;
+    }
+
+    .profile-btn {
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .profile-popup-card {
+      width: min(320px, 100%);
+      position: relative;
+      padding-top: 34px;
+    }
+    .profile-popup-card h3 {
+      margin: 0 0 10px;
+      color: #f5fbff;
+      letter-spacing: 0.04em;
+      font-family: Consolas, monospace;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+    .profile-popup-card .button-row button {
+      width: 100%;
+      justify-content: center;
+      border: 1px solid rgba(198, 226, 255, 0.44);
+      background: linear-gradient(180deg, rgba(228, 244, 255, 0.26), rgba(161, 201, 242, 0.14));
+      color: #eef7ff;
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 10px 16px rgba(8, 20, 40, 0.26);
+      text-shadow: 0 1px 1px rgba(0,0,0,0.25);
+    }
+    .profile-popup-card .button-row button:hover {
+      background: linear-gradient(180deg, rgba(243, 251, 255, 0.34), rgba(184, 217, 250, 0.2));
+      border-color: rgba(220, 238, 255, 0.62);
+    }
+    .profile-popup-card .button-row {
+      margin-top: 8px !important;
+    }
+    .profile-popup-card .button-row:first-of-type {
+      margin-top: 2px !important;
+    }
+    .popup-close-icon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 30px;
+      height: 30px;
+      min-height: 30px;
+      border-radius: 999px;
+      border: 1px solid rgba(190, 220, 255, 0.48);
+      background: linear-gradient(180deg, rgba(240, 249, 255, 0.38), rgba(171, 206, 248, 0.2));
+      color: #e9f4ff;
+      font-size: 1.05rem;
+      line-height: 1;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 8px 14px rgba(4, 12, 28, 0.3);
+    }
+
+    @media (max-width: 1120px) {
+      .app-header {
+        padding: 6px 10px;
+      }
+      .header-copy span,
+      .header-badge { display: none; }
+      .layout { grid-template-columns: 1fr; }
+      .layout.sidebar-collapsed { grid-template-columns: 1fr; }
+      .side-stack { position: static; }
+      .layout.sidebar-collapsed .side-stack {
+        display: none;
+      }
+      .row { grid-template-columns: 1fr; }
+      .overlay-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="panel app-header">
+      <div class="header-left">
+        <button id="logoToggleBtn" class="logo-toggle" type="button" aria-label="Toggle tools sidebar" aria-expanded="false">
+          <span class="logo-default" aria-hidden="true">
+            <svg class="logo-art" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M32 8C38 12 44 17 44 24C44 31 38 36 32 40C26 36 20 31 20 24C20 17 26 12 32 8Z" fill="#86E06F" stroke="#2F6F2A" stroke-width="2"/>
+              <path d="M14 30C22 30 28 34 32 40C25 44 18 46 12 44C8 42 8 34 14 30Z" fill="#9CEB7C" stroke="#2F6F2A" stroke-width="2"/>
+              <path d="M50 30C42 30 36 34 32 40C39 44 46 46 52 44C56 42 56 34 50 30Z" fill="#9CEB7C" stroke="#2F6F2A" stroke-width="2"/>
+            </svg>
+          </span>
+          <span class="logo-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+        <div class="header-copy">
+          <strong>ClipMint Studio</strong>
+          <span>Production Dashboard</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="header-badge">Ready</span>
+        <button id="profileBtn" class="profile-btn" type="button" aria-label="Open profile menu">U</button>
+      </div>
+    </header>
+
+    <div id="appLayout" class="layout sidebar-collapsed">
+    <aside class="side-stack">
+      <section id="sideShortsPanel" class="panel side">
+        <h3>AI VEDIO SHORTS GENARETOR</h3>
+        <div class="tiny">Max 2 saved uploads. Delete one to add another.</div>
+        <div class="memory-meter">
+          <div class="track"><div id="memoryFill" class="fill"></div></div>
+          <div id="memoryLabel" class="tiny" style="margin-top:6px;">0 / 2 used</div>
+        </div>
+        <div id="memoryList" class="memory-list"></div>
+        <div class="tool-nav">
+          <button id="showShortsToolBtn" type="button" class="tool-card-btn">AI Video Shorts Generator</button>
+        </div>
+      </section>
+
+      <section id="sideMergePanel" class="panel side compact">
+        <h3>VIDEO MERGING TOOL</h3>
+        <div class="tiny">Merge memory: max 4 uploaded videos (2 pairs).</div>
+        <div class="memory-meter">
+          <div class="track"><div id="mergeMemoryFill" class="fill"></div></div>
+          <div id="mergeMemoryLabel" class="tiny" style="margin-top:6px;">0 / 4 uploaded videos used</div>
+        </div>
+        <div id="mergeMemoryList" class="memory-list"></div>
+        <div class="tool-nav">
+          <button id="showMergeToolBtn" type="button" class="tool-card-btn">Video Merging Tool</button>
+        </div>
+      </section>
+
+      <section id="sideDownloaderPanel" class="panel side compact">
+        <h3>VIDEO DOWNLOADER</h3>
+        <div class="tiny">Downloader memory: max 5 files (MP3/MP4).</div>
+        <div class="memory-meter">
+          <div class="track"><div id="downloaderMemoryFill" class="fill"></div></div>
+          <div id="downloaderMemoryLabel" class="tiny" style="margin-top:6px;">0 / 5 used</div>
+        </div>
+        <div id="downloaderMemoryList" class="memory-list"></div>
+        <div class="tool-nav">
+          <button id="showDownloaderToolBtn" type="button" class="tool-card-btn">Video Downloader</button>
+          <button id="showDownloaderMemoryBtn" type="button" class="tool-card-btn">Show Downloaded Files</button>
+        </div>
+      </section>
+    </aside>
+
+    <main class="panel main">
+      <section id="aboutSection" class="about-section">
+      <h1>About Our System</h1>
+      <p class="tagline">ClipMint is a production-ready workspace for creating shorts, merging videos, and downloading source clips with memory-backed workflows.</p>
+      <div class="about-grid">
+        <article class="about-card">
+          <h3>Shorts Generator</h3>
+          <div class="tiny">Upload once, generate multiple reels, and continue from saved timeline memory.</div>
+        </article>
+        <article class="about-card">
+          <h3>Video Merging</h3>
+          <div class="tiny">Combine two videos with editable audio mix, draggable overlays, and reusable merge presets.</div>
+        </article>
+        <article class="about-card">
+          <h3>Downloader</h3>
+          <div class="tiny">Download MP4/MP3 from supported links and reuse saved items through downloader memory.</div>
+        </article>
+      </div>
+      <p class="tiny">Open the sidebar using the logo button in the header, then select a tool to begin.</p>
+      </section>
+
+      <section id="shortsToolSection" style="display:none;">
+      <h1>AI Video Shorts Generator</h1>
+      <p class="tagline">Parallel cyber-render engine with finalization-safe playback, timeline memory, and resume generation from previous uploads.</p>
+
+      <div id="errorBox" class="error"></div>
+
+      <form id="uploadForm" enctype="multipart/form-data">
+        <div class="row">
+          <input id="videoInput" class="control" type="file" name="file" accept="video/*" />
+          <select id="segmentSelect" class="control" name="segment_seconds">
+            <option value="30">30s</option>
+            <option value="45">45s</option>
+            <option value="60">60s</option>
+            <option value="90">90s</option>
+            <option value="120" selected>120s</option>
+          </select>
+        </div>
+        <div id="countWrap" class="count-wrap">
+          <select id="countSelect" class="control" name="shorts_count"></select>
+          <div id="countHint" class="tiny" style="margin-top:6px;"></div>
+        </div>
+        <div class="mode-row">
+          <span class="tiny">Safe Mode:</span>
+          <div class="mode-group">
+            <button id="modeBalancedBtn" class="mode-btn active" type="button" data-mode="balanced">Balanced (Recommended)</button>
+            <button id="modeAllBtn" class="mode-btn" type="button" data-mode="all_parallel">All Parallel (Max Speed)</button>
+          </div>
+          <span id="modeHint" class="tiny">Balanced uses fewer workers for safer CPU/GPU load.</span>
+          <input id="processingModeInput" type="hidden" name="processing_mode" value="balanced" />
+        </div>
+        <div class="mode-row">
+          <label class="tiny" style="display:flex; align-items:center; gap:6px;">
+            <input id="useCustomStart" type="checkbox" />
+            Use Custom Timeline Start
+          </label>
+          <input id="startTimeInput" class="control" type="text" placeholder="HH:MM:SS (example 00:15:00)" style="max-width:260px; display:none;" />
+          <input id="endTimeInput" class="control" type="text" placeholder="HH:MM:SS End (example 00:25:00)" style="max-width:260px; display:none;" />
+          <span id="startHint" class="tiny">Default start: auto from memory cursor.</span>
+        </div>
+        <div class="mode-row">
+          <label class="tiny" style="display:flex; align-items:center; gap:6px;">
+            <input id="useCustomText" type="checkbox" checked />
+            Enable Custom Text / Part Overlay
+          </label>
+        </div>
+        <div id="overlayControls" class="overlay-grid">
+          <button id="openPositionEditorBtn" type="button" class="secondary">Open Position Editor</button>
+          <input id="textPrimaryInput" class="control" type="text" value="MOVIES CLIP CHAMP" placeholder="Text 1 (e.g. MOVIE: FUKREY)" />
+          <input id="textSecondaryInput" class="control" type="text" placeholder="Text 2 (e.g. SOURCE: NETFLIX)" />
+          <select id="fontKeySelect" class="control">
+            <option value="arial" selected>Arial</option>
+            <option value="tahoma">Tahoma</option>
+            <option value="verdana">Verdana</option>
+            <option value="times">Times New Roman</option>
+            <option value="impact">Impact</option>
+          </select>
+          <input id="fontColorInput" class="control" type="color" value="#ffffff" />
+          <input id="fontSizeInput" class="control" type="number" min="20" max="120" value="56" />
+          <div id="posSummary" class="pos-summary">Text1(40,1640) | Text2(40,1710) | Part(820,40)</div>
+        </div>
+        <div class="button-row">
+          <button id="uploadGenerateBtn" type="submit">Upload + Generate</button>
+          <button id="generateMoreBtn" class="secondary" type="button">Generate More From Selected Memory</button>
+          <button id="stopBtn" class="warn" type="button" disabled>Stop Processing</button>
+        </div>
+      </form>
+
+      <div id="statusBox" class="status">
+        <div class="status-head">
+          <strong id="statusText">Status: Waiting</strong>
+          <span class="tiny">ALL-SEGMENTS PARALLEL MODE</span>
+        </div>
+        <div id="timelineText" class="tiny">Timeline: -</div>
+        <div style="margin-top:8px;" class="track"><div id="overallFill" class="fill"></div></div>
+        <div id="overallLabel" class="tiny" style="margin-top:6px;">Overall Progress: 0%</div>
+      </div>
+
+      <section style="margin-top:14px;">
+        <h3 style="margin:0; font-family:Consolas, monospace; letter-spacing:0.06em;">Generated Shorts</h3>
+        <div id="cards" class="cards"></div>
+      </section>
+      </section>
+
+      <section id="mergeToolSection" style="display:none;">
+        <h1>Video Merging Tool</h1>
+        <p class="tagline">Upload two videos, add custom texts, adjust video/text positions in editor, choose audio blend, then generate one merged output.</p>
+
+        <div id="mergeErrorBox" class="error"></div>
+        <form id="mergeForm" enctype="multipart/form-data">
+          <div class="row merge-upload-row">
+            <input id="mergeVideo1" class="control" type="file" accept="video/*" />
+            <input id="mergeVideo2" class="control" type="file" accept="video/*" />
+          </div>
+
+          <div class="mode-row">
+            <label class="tiny" style="min-width:130px;">Video 1 Audio: <span id="audio1Label">100%</span></label>
+            <input id="audio1Range" type="range" min="0" max="100" value="100" />
+            <label class="tiny" style="min-width:130px;">Video 2 Audio: <span id="audio2Label">0%</span></label>
+            <input id="audio2Range" type="range" min="0" max="100" value="0" />
+          </div>
+
+          <div class="mode-row" style="margin-top:12px;">
+            <strong>Overlay Texts</strong>
+            <button id="addMergeTextBtn" type="button" class="secondary">Add Text Field</button>
+            <button id="openMergeEditorBtn" type="button" class="secondary">Open Editor</button>
+          </div>
+          <div id="mergeTextRows"></div>
+
+          <div class="button-row">
+            <button id="startMergeBtn" type="submit">Generate Merged Video</button>
+            <button id="stopMergeBtn" class="warn" type="button" disabled>Stop Processing</button>
+          </div>
+        </form>
+
+        <div id="mergeStatusBox" class="status">
+          <div class="status-head">
+            <strong id="mergeStatusText">Status: Waiting</strong>
+          </div>
+          <div class="track"><div id="mergeProgressFill" class="fill"></div></div>
+          <div id="mergeProgressLabel" class="tiny" style="margin-top:6px;">Progress: 0%</div>
+        </div>
+
+        <div id="mergeStoredResults" class="cards" style="margin-top:12px; display:none;"></div>
+      </section>
+
+      <section id="downloaderToolSection" style="display:none;">
+        <h1>Video Downloader</h1>
+        <p class="tagline">Paste any supported video URL, select platform and output format, then download your file.</p>
+
+        <div id="downloaderErrorBox" class="error"></div>
+        <form id="downloaderForm">
+          <div class="row">
+            <input id="downloadUrlInput" class="control" type="url" placeholder="Paste video link (https://...)" required />
+            <select id="downloadSourceSelect" class="control">
+              <option value="youtube" selected>YouTube</option>
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="x">X / Twitter</option>
+              <option value="tiktok">TikTok</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <select id="downloadFormatSelect" class="control">
+              <option value="mp4" selected>MP4 (Video)</option>
+              <option value="mp3">MP3 (Audio)</option>
+            </select>
+            <div class="button-row" style="margin-top:0;">
+              <button id="startDownloadBtn" type="submit">Download</button>
+              <button id="stopDownloadBtn" class="warn" type="button" disabled>Stop Downloading</button>
+            </div>
+          </div>
+          <div class="mode-row">
+            <span class="tiny">Download Profile:</span>
+            <div class="mode-group">
+              <button id="downloadUltraFastBtn" class="mode-btn" type="button" data-download-profile="ultra_fast">Ultra Fast</button>
+              <button id="downloadFastBtn" class="mode-btn" type="button" data-download-profile="fast">Fast</button>
+              <button id="downloadBalancedBtn" class="mode-btn active" type="button" data-download-profile="balanced">Balanced</button>
+              <button id="downloadQualityBtn" class="mode-btn" type="button" data-download-profile="high_quality">High Quality</button>
+            </div>
+            <span id="downloadProfileHint" class="tiny">Balanced keeps good quality with stable speed.</span>
+            <input id="downloadProfileInput" type="hidden" value="balanced" />
+          </div>
+        </form>
+
+        <div id="downloaderStatusBox" class="status">
+          <div class="status-head">
+            <strong id="downloaderStatusText">Status: Waiting</strong>
+          </div>
+          <div class="track" style="margin-top:6px;"><div id="downloaderProgressFill" class="fill"></div></div>
+          <div id="downloaderProgressLabel" class="tiny" style="margin-top:6px;">Progress: 0%</div>
+          <div id="downloaderTimerLabel" class="tiny" style="margin-top:6px;">Elapsed: 00:00 | ETA: --:--</div>
+          <div id="downloaderHintText" class="tiny">Preview and save options appear after completion.</div>
+        </div>
+        <div id="downloaderResultBox" class="cards" style="margin-top:12px; display:none;"></div>
+        <section id="downloaderMemorySection" style="margin-top:14px;">
+          <h3 style="margin:0; font-family:Consolas, monospace; letter-spacing:0.06em;">Downloader Memory (Max 5)</h3>
+          <div id="downloaderStoredCards" class="cards" style="margin-top:10px;"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+  </div>
+
+  <div id="posModal" class="modal">
+    <div class="modal-content">
+      <div class="mode-row" style="margin-top:0;">
+        <strong>Pixel Position Editor (1080x1920)</strong>
+        <div style="flex:1;"></div>
+        <button id="closePositionEditorBtn" type="button" class="warn">Close</button>
+      </div>
+      <div class="editor-wrap">
+        <div id="editorStage" class="editor-stage">
+          <div id="dragText1" class="drag-text">TEXT 1</div>
+          <div id="dragText2" class="drag-text">TEXT 2</div>
+          <div id="dragPart" class="drag-text">PART-1</div>
+        </div>
+        <div class="editor-controls">
+          <div class="ctrl-card">
+            <div><strong>Text 1</strong></div>
+            <div class="xy-row">
+              <input id="text1XInput" class="control" type="number" min="0" max="1080" step="1" />
+              <input id="text1YInput" class="control" type="number" min="0" max="1920" step="1" />
+              <button id="text1NudgeBtn" type="button">+1px</button>
+            </div>
+          </div>
+          <div class="ctrl-card">
+            <div><strong>Text 2</strong></div>
+            <div class="xy-row">
+              <input id="text2XInput" class="control" type="number" min="0" max="1080" step="1" />
+              <input id="text2YInput" class="control" type="number" min="0" max="1920" step="1" />
+              <button id="text2NudgeBtn" type="button">+1px</button>
+            </div>
+          </div>
+          <div class="ctrl-card">
+            <div><strong>Part Label</strong></div>
+            <div class="xy-row">
+              <input id="partXInput" class="control" type="number" min="0" max="1080" step="1" />
+              <input id="partYInput" class="control" type="number" min="0" max="1920" step="1" />
+              <button id="partNudgeBtn" type="button">+1px</button>
+            </div>
+          </div>
+          <div class="tiny">Tip: drag labels directly in preview or type exact pixel values.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mergeEditorModal" class="modal">
+    <div class="modal-content">
+      <div class="mode-row" style="margin-top:0;">
+        <strong>Merge Editor (Drag Video + Text Positions)</strong>
+        <div style="flex:1;"></div>
+        <button id="closeMergeEditorBtn" type="button" class="warn">Close</button>
+      </div>
+      <div class="editor-wrap">
+        <div id="mergePreviewStage" class="merge-preview"></div>
+        <div class="editor-controls">
+          <div class="ctrl-card">
+            <div><strong>Video 1 Rect</strong></div>
+            <div class="xy-row">
+              <input id="mv1x" class="control" type="number" min="0" max="1080" />
+              <input id="mv1y" class="control" type="number" min="0" max="1920" />
+              <input id="mv1w" class="control" type="number" min="120" max="1080" />
+            </div>
+            <div class="xy-row">
+              <input id="mv1h" class="control" type="number" min="120" max="1920" />
+            </div>
+          </div>
+          <div class="ctrl-card">
+            <div><strong>Video 2 Rect</strong></div>
+            <div class="xy-row">
+              <input id="mv2x" class="control" type="number" min="0" max="1080" />
+              <input id="mv2y" class="control" type="number" min="0" max="1920" />
+              <input id="mv2w" class="control" type="number" min="120" max="1080" />
+            </div>
+            <div class="xy-row">
+              <input id="mv2h" class="control" type="number" min="120" max="1920" />
+            </div>
+          </div>
+          <div id="mergeTextPosControls" class="ctrl-card"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="authGate" class="auth-gate">
+    <div class="auth-card">
+      <h3 class="auth-title">Login with Email OTP</h3>
+      <p class="auth-note">Enter your email. We will send a 6-digit verification code.</p>
+      <div class="auth-row">
+        <input id="authEmailInput" class="control" type="email" placeholder="you@example.com" />
+        <button id="sendOtpBtn" type="button">Send OTP</button>
+      </div>
+      <div class="auth-row">
+        <input id="authOtpInput" class="control" type="text" maxlength="6" placeholder="Enter OTP" />
+        <input id="authNameInput" class="control" type="text" maxlength="40" placeholder="Display name (optional)" />
+        <button id="verifyOtpBtn" type="button" class="secondary">Verify & Login</button>
+      </div>
+      <div id="authStatusText" class="auth-status"></div>
+    </div>
+  </div>
+  <div id="infoModal" class="info-modal">
+    <div class="info-card">
+      <h3 id="infoModalTitle">Notice</h3>
+      <p id="infoModalText">Coming soon</p>
+      <div class="button-row" style="margin-top:0;">
+        <button id="infoModalCloseBtn" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+  <div id="profilePopup" class="info-modal">
+    <div class="info-card profile-popup-card">
+      <button id="profilePopupCloseBtn" type="button" class="popup-close-icon" aria-label="Close popup">&times;</button>
+      <h3>Profile Menu</h3>
+      <div class="button-row" style="margin-top:0;">
+        <button id="menuSettingsBtn" type="button">Settings</button>
+      </div>
+      <div class="button-row" style="margin-top:0;">
+        <button id="menuHelpBtn" type="button">Help</button>
+      </div>
+      <div class="button-row" style="margin-top:0;">
+        <button id="menuUpgradeBtn" type="button">Upgrade</button>
+      </div>
+      <div class="button-row" style="margin-top:0;">
+        <button id="menuLogoutBtn" type="button" class="warn">Logout</button>
+      </div>
+    </div>
+  </div>
+  <div id="logoutConfirmModal" class="info-modal">
+    <div class="info-card profile-popup-card">
+      <h3>Confirm Logout</h3>
+      <p style="margin:0 0 10px; color:#e8f4ff;">Are you sure you want to logout?</p>
+      <div class="button-row" style="margin-top:0;">
+        <button id="logoutCancelBtn" type="button" class="secondary">Cancel</button>
+      </div>
+      <div class="button-row" style="margin-top:0;">
+        <button id="logoutConfirmBtn" type="button" class="warn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const uploadForm = document.getElementById('uploadForm');
+    const videoInput = document.getElementById('videoInput');
+    const segmentSelect = document.getElementById('segmentSelect');
+    const countWrap = document.getElementById('countWrap');
+    const countSelect = document.getElementById('countSelect');
+    const countHint = document.getElementById('countHint');
+    const uploadGenerateBtn = document.getElementById('uploadGenerateBtn');
+    const generateMoreBtn = document.getElementById('generateMoreBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const modeBalancedBtn = document.getElementById('modeBalancedBtn');
+    const modeAllBtn = document.getElementById('modeAllBtn');
+    const modeHint = document.getElementById('modeHint');
+    const processingModeInput = document.getElementById('processingModeInput');
+    const useCustomStart = document.getElementById('useCustomStart');
+    const startTimeInput = document.getElementById('startTimeInput');
+    const endTimeInput = document.getElementById('endTimeInput');
+    const startHint = document.getElementById('startHint');
+    const textPrimaryInput = document.getElementById('textPrimaryInput');
+    const textSecondaryInput = document.getElementById('textSecondaryInput');
+    const useCustomText = document.getElementById('useCustomText');
+    const overlayControls = document.getElementById('overlayControls');
+    const fontKeySelect = document.getElementById('fontKeySelect');
+    const fontColorInput = document.getElementById('fontColorInput');
+    const fontSizeInput = document.getElementById('fontSizeInput');
+    const openPositionEditorBtn = document.getElementById('openPositionEditorBtn');
+    const closePositionEditorBtn = document.getElementById('closePositionEditorBtn');
+    const posModal = document.getElementById('posModal');
+    const editorStage = document.getElementById('editorStage');
+    const dragText1 = document.getElementById('dragText1');
+    const dragText2 = document.getElementById('dragText2');
+    const dragPart = document.getElementById('dragPart');
+    const text1XInput = document.getElementById('text1XInput');
+    const text1YInput = document.getElementById('text1YInput');
+    const text2XInput = document.getElementById('text2XInput');
+    const text2YInput = document.getElementById('text2YInput');
+    const partXInput = document.getElementById('partXInput');
+    const partYInput = document.getElementById('partYInput');
+    const text1NudgeBtn = document.getElementById('text1NudgeBtn');
+    const text2NudgeBtn = document.getElementById('text2NudgeBtn');
+    const partNudgeBtn = document.getElementById('partNudgeBtn');
+    const posSummary = document.getElementById('posSummary');
+    const errorBox = document.getElementById('errorBox');
+    const statusBox = document.getElementById('statusBox');
+    const statusText = document.getElementById('statusText');
+    const timelineText = document.getElementById('timelineText');
+    const overallFill = document.getElementById('overallFill');
+    const overallLabel = document.getElementById('overallLabel');
+    const cards = document.getElementById('cards');
+
+    const memoryFill = document.getElementById('memoryFill');
+    const memoryLabel = document.getElementById('memoryLabel');
+    const memoryList = document.getElementById('memoryList');
+    const appLayout = document.getElementById('appLayout');
+    const logoToggleBtn = document.getElementById('logoToggleBtn');
+    const authGate = document.getElementById('authGate');
+    const authEmailInput = document.getElementById('authEmailInput');
+    const authOtpInput = document.getElementById('authOtpInput');
+    const authNameInput = document.getElementById('authNameInput');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const authStatusText = document.getElementById('authStatusText');
+    const menuSettingsBtn = document.getElementById('menuSettingsBtn');
+    const menuHelpBtn = document.getElementById('menuHelpBtn');
+    const menuUpgradeBtn = document.getElementById('menuUpgradeBtn');
+    const menuLogoutBtn = document.getElementById('menuLogoutBtn');
+    const profileBtn = document.getElementById('profileBtn');
+    const profilePopup = document.getElementById('profilePopup');
+    const profilePopupCloseBtn = document.getElementById('profilePopupCloseBtn');
+    const logoutConfirmModal = document.getElementById('logoutConfirmModal');
+    const logoutCancelBtn = document.getElementById('logoutCancelBtn');
+    const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
+    const infoModal = document.getElementById('infoModal');
+    const infoModalTitle = document.getElementById('infoModalTitle');
+    const infoModalText = document.getElementById('infoModalText');
+    const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
+    const aboutSection = document.getElementById('aboutSection');
+    const sideShortsPanel = document.getElementById('sideShortsPanel');
+    const sideMergePanel = document.getElementById('sideMergePanel');
+    const sideDownloaderPanel = document.getElementById('sideDownloaderPanel');
+    const showShortsToolBtn = document.getElementById('showShortsToolBtn');
+    const showMergeToolBtn = document.getElementById('showMergeToolBtn');
+    const showDownloaderToolBtn = document.getElementById('showDownloaderToolBtn');
+    const showDownloaderMemoryBtn = document.getElementById('showDownloaderMemoryBtn');
+    const shortsToolSection = document.getElementById('shortsToolSection');
+    const mergeToolSection = document.getElementById('mergeToolSection');
+    const downloaderToolSection = document.getElementById('downloaderToolSection');
+
+    const mergeForm = document.getElementById('mergeForm');
+    const mergeVideo1 = document.getElementById('mergeVideo1');
+    const mergeVideo2 = document.getElementById('mergeVideo2');
+    const addMergeTextBtn = document.getElementById('addMergeTextBtn');
+    const mergeTextRows = document.getElementById('mergeTextRows');
+    const openMergeEditorBtn = document.getElementById('openMergeEditorBtn');
+    const mergeEditorModal = document.getElementById('mergeEditorModal');
+    const closeMergeEditorBtn = document.getElementById('closeMergeEditorBtn');
+    const mergePreviewStage = document.getElementById('mergePreviewStage');
+    const mergeTextPosControls = document.getElementById('mergeTextPosControls');
+    const mergeErrorBox = document.getElementById('mergeErrorBox');
+    const mergeStatusBox = document.getElementById('mergeStatusBox');
+    const mergeStatusText = document.getElementById('mergeStatusText');
+    const mergeProgressFill = document.getElementById('mergeProgressFill');
+    const mergeProgressLabel = document.getElementById('mergeProgressLabel');
+    const mergeStoredResults = document.getElementById('mergeStoredResults');
+    const startMergeBtn = document.getElementById('startMergeBtn');
+    const stopMergeBtn = document.getElementById('stopMergeBtn');
+    const mergeMemoryFill = document.getElementById('mergeMemoryFill');
+    const mergeMemoryLabel = document.getElementById('mergeMemoryLabel');
+    const mergeMemoryList = document.getElementById('mergeMemoryList');
+    const audio1Range = document.getElementById('audio1Range');
+    const audio2Range = document.getElementById('audio2Range');
+    const audio1Label = document.getElementById('audio1Label');
+    const audio2Label = document.getElementById('audio2Label');
+    const mv1x = document.getElementById('mv1x');
+    const mv1y = document.getElementById('mv1y');
+    const mv1w = document.getElementById('mv1w');
+    const mv1h = document.getElementById('mv1h');
+    const mv2x = document.getElementById('mv2x');
+    const mv2y = document.getElementById('mv2y');
+    const mv2w = document.getElementById('mv2w');
+    const mv2h = document.getElementById('mv2h');
+    const downloaderForm = document.getElementById('downloaderForm');
+    const downloadUrlInput = document.getElementById('downloadUrlInput');
+    const downloadSourceSelect = document.getElementById('downloadSourceSelect');
+    const downloadFormatSelect = document.getElementById('downloadFormatSelect');
+    const downloadUltraFastBtn = document.getElementById('downloadUltraFastBtn');
+    const downloadFastBtn = document.getElementById('downloadFastBtn');
+    const downloadBalancedBtn = document.getElementById('downloadBalancedBtn');
+    const downloadQualityBtn = document.getElementById('downloadQualityBtn');
+    const downloadProfileHint = document.getElementById('downloadProfileHint');
+    const downloadProfileInput = document.getElementById('downloadProfileInput');
+    const startDownloadBtn = document.getElementById('startDownloadBtn');
+    const stopDownloadBtn = document.getElementById('stopDownloadBtn');
+    const downloaderErrorBox = document.getElementById('downloaderErrorBox');
+    const downloaderStatusBox = document.getElementById('downloaderStatusBox');
+    const downloaderStatusText = document.getElementById('downloaderStatusText');
+    const downloaderProgressFill = document.getElementById('downloaderProgressFill');
+    const downloaderProgressLabel = document.getElementById('downloaderProgressLabel');
+    const downloaderTimerLabel = document.getElementById('downloaderTimerLabel');
+    const downloaderHintText = document.getElementById('downloaderHintText');
+    const downloaderResultBox = document.getElementById('downloaderResultBox');
+    const downloaderMemoryFill = document.getElementById('downloaderMemoryFill');
+    const downloaderMemoryLabel = document.getElementById('downloaderMemoryLabel');
+    const downloaderMemoryList = document.getElementById('downloaderMemoryList');
+    const downloaderStoredCards = document.getElementById('downloaderStoredCards');
+    const downloaderMemorySection = document.getElementById('downloaderMemorySection');
+
+    let currentJobId = null;
+    let pollHandle = null;
+    let selectedSourceId = null;
+    let cachedSources = [];
+    let activeMode = 'balanced';
+    let selectedFileDurationSec = null;
+    let durationProbeToken = 0;
+    let mergePollHandle = null;
+    let mergeJobId = null;
+    let selectedMergeSourceId = null;
+    let cachedMergeSources = [];
+    let downloaderPollHandle = null;
+    let downloaderJobId = null;
+    let downloaderPollInFlight = false;
+    let downloaderProgressValue = 0;
+    let downloaderStartMs = null;
+    let downloaderEtaSeconds = null;
+    let downloaderEtaLastTickMs = null;
+    let downloaderEtaProgressRef = 0;
+    let downloaderEtaProgressTs = null;
+    let cachedDownloaderItems = [];
+    let selectedDownloaderItemId = null;
+    let currentUser = null;
+    const stageScaleX = 1080 / 360;
+    const stageScaleY = 1920 / 640;
+    const pixelPos = {
+      text1_x: 40,
+      text1_y: 1640,
+      text2_x: 40,
+      text2_y: 1710,
+      part_x: 820,
+      part_y: 40,
+    };
+    const mergeScale = { x: 1080 / 380, y: 1920 / 676 };
+    const mergeState = {
+      video1: { x: 0, y: 0, w: 1080, h: 960 },
+      video2: { x: 0, y: 960, w: 1080, h: 960 },
+      audio1_pct: 100,
+      audio2_pct: 0,
+      texts: [],
+    };
+
+    function toggleCustomTextControls() {
+      const enabled = !!useCustomText.checked;
+      overlayControls.style.display = enabled ? 'grid' : 'none';
+      openPositionEditorBtn.disabled = !enabled;
+      textPrimaryInput.disabled = !enabled;
+      textSecondaryInput.disabled = !enabled;
+      fontKeySelect.disabled = !enabled;
+      fontColorInput.disabled = !enabled;
+      fontSizeInput.disabled = !enabled;
+    }
+
+    function clampPixelPositions() {
+      pixelPos.text1_x = Math.max(0, Math.min(1080, Math.round(pixelPos.text1_x)));
+      pixelPos.text1_y = Math.max(0, Math.min(1920, Math.round(pixelPos.text1_y)));
+      pixelPos.text2_x = Math.max(0, Math.min(1080, Math.round(pixelPos.text2_x)));
+      pixelPos.text2_y = Math.max(0, Math.min(1920, Math.round(pixelPos.text2_y)));
+      pixelPos.part_x = Math.max(0, Math.min(1080, Math.round(pixelPos.part_x)));
+      pixelPos.part_y = Math.max(0, Math.min(1920, Math.round(pixelPos.part_y)));
+    }
+
+    function syncPositionInputsFromState() {
+      clampPixelPositions();
+      text1XInput.value = String(pixelPos.text1_x);
+      text1YInput.value = String(pixelPos.text1_y);
+      text2XInput.value = String(pixelPos.text2_x);
+      text2YInput.value = String(pixelPos.text2_y);
+      partXInput.value = String(pixelPos.part_x);
+      partYInput.value = String(pixelPos.part_y);
+      posSummary.textContent = `Text1(${pixelPos.text1_x},${pixelPos.text1_y}) | Text2(${pixelPos.text2_x},${pixelPos.text2_y}) | Part(${pixelPos.part_x},${pixelPos.part_y})`;
+    }
+
+    function renderDragPositions() {
+      dragText1.style.left = `${Math.round(pixelPos.text1_x / stageScaleX)}px`;
+      dragText1.style.top = `${Math.round(pixelPos.text1_y / stageScaleY)}px`;
+      dragText2.style.left = `${Math.round(pixelPos.text2_x / stageScaleX)}px`;
+      dragText2.style.top = `${Math.round(pixelPos.text2_y / stageScaleY)}px`;
+      dragPart.style.left = `${Math.round(pixelPos.part_x / stageScaleX)}px`;
+      dragPart.style.top = `${Math.round(pixelPos.part_y / stageScaleY)}px`;
+      dragText1.textContent = textPrimaryInput.value || 'TEXT 1';
+      dragText2.textContent = textSecondaryInput.value || 'TEXT 2';
+      dragPart.textContent = 'PART-1';
+      const color = fontColorInput.value || '#ffffff';
+      const fs = Math.max(20, Math.min(120, Number(fontSizeInput.value) || 56));
+      dragText1.style.color = color;
+      dragText2.style.color = color;
+      dragPart.style.color = color;
+      dragText1.style.fontSize = `${Math.max(12, Math.round(fs / 3))}px`;
+      dragText2.style.fontSize = `${Math.max(11, Math.round((fs - 8) / 3))}px`;
+      dragPart.style.fontSize = `${Math.max(11, Math.round((fs - 4) / 3))}px`;
+    }
+
+    function syncAllPositionUi() {
+      syncPositionInputsFromState();
+      renderDragPositions();
+    }
+
+    function bindDrag(elem, keyX, keyY) {
+      let dragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+      elem.addEventListener('mousedown', (e) => {
+        dragging = true;
+        elem.classList.add('active');
+        const rect = elem.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+      });
+      window.addEventListener('mouseup', () => {
+        dragging = false;
+        elem.classList.remove('active');
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const stageRect = editorStage.getBoundingClientRect();
+        const x = e.clientX - stageRect.left - offsetX;
+        const y = e.clientY - stageRect.top - offsetY;
+        pixelPos[keyX] = x * stageScaleX;
+        pixelPos[keyY] = y * stageScaleY;
+        syncAllPositionUi();
+      });
+    }
+
+    function parseStartToSeconds(raw) {
+      const v = String(raw || '').trim();
+      if (!v) return null;
+      const parts = v.split(':');
+      let h = 0;
+      let m = 0;
+      let s = 0;
+      if (parts.length === 2) {
+        m = Number(parts[0]);
+        s = Number(parts[1]);
+      } else if (parts.length === 3) {
+        h = Number(parts[0]);
+        m = Number(parts[1]);
+        s = Number(parts[2]);
+      } else {
+        return NaN;
+      }
+      if (![h, m, s].every(Number.isFinite)) return NaN;
+      if (h < 0 || m < 0 || s < 0 || m >= 60 || s >= 60) return NaN;
+      return Math.floor(h * 3600 + m * 60 + s);
+    }
+
+
+    function getSelectedSource() {
+      return cachedSources.find((s) => s.id === selectedSourceId) || null;
+    }
+
+    function setCountOptions(maxCount, message) {
+      const max = Math.max(1, Math.floor(maxCount));
+      const previous = Number(countSelect.value || 1);
+      countSelect.innerHTML = '';
+      for (let i = 1; i <= max; i += 1) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = String(i);
+        countSelect.appendChild(opt);
+      }
+      countSelect.value = String(Math.min(Math.max(1, previous), max));
+      countHint.textContent = message;
+      countWrap.style.display = 'block';
+    }
+
+    function hideCountOptions(message) {
+      countSelect.innerHTML = '';
+      countHint.textContent = message;
+      countWrap.style.display = 'none';
+    }
+
+    function refreshCountConstraints() {
+      const seg = Number(segmentSelect.value);
+      const source = getSelectedSource();
+      const customEnabled = useCustomStart.checked;
+      const customStartSec = parseStartToSeconds(startTimeInput.value);
+      const customEndSec = parseStartToSeconds(endTimeInput.value);
+      if (!Number.isFinite(seg) || seg <= 0) {
+        hideCountOptions('Select a valid segment duration.');
+        return;
+      }
+
+      if (!source && videoInput.files && videoInput.files.length > 0 && Number.isFinite(selectedFileDurationSec) && selectedFileDurationSec > 0) {
+        let startSec = 0;
+        let endSec = Math.ceil(selectedFileDurationSec);
+        if (customEnabled) {
+          if (!Number.isFinite(customStartSec) || customStartSec === null) {
+            hideCountOptions('Enter valid custom start HH:MM:SS.');
+            return;
+          }
+          if (!Number.isFinite(customEndSec) || customEndSec === null) {
+            hideCountOptions('Enter valid custom end HH:MM:SS.');
+            return;
+          }
+          if (customEndSec <= customStartSec) {
+            hideCountOptions('Custom end must be greater than custom start.');
+            return;
+          }
+          if (customStartSec >= Math.ceil(selectedFileDurationSec)) {
+            hideCountOptions('Custom start exceeds uploaded video duration.');
+            return;
+          }
+          if (customEndSec > Math.ceil(selectedFileDurationSec)) {
+            hideCountOptions('Custom end exceeds uploaded video duration.');
+            return;
+          }
+          startSec = customStartSec;
+          endSec = customEndSec;
+        }
+        const maxFromFile = Math.max(1, Math.ceil((endSec - startSec) / seg));
+        setCountOptions(maxFromFile, `Uploaded video allows 1-${maxFromFile} shorts at ${seg}s.`);
+        return;
+      }
+
+      if (!source) {
+        hideCountOptions('Shorts counter appears after video duration is known.');
+        return;
+      }
+
+      const duration = Number(source.duration_sec || 0);
+      let cursorSec = Number(source.cursor_sec || 0);
+      let effectiveEndSec = Math.ceil(duration);
+      if (customEnabled) {
+        if (!Number.isFinite(customStartSec) || customStartSec === null) {
+          hideCountOptions('Enter valid custom start HH:MM:SS.');
+          return;
+        }
+        if (!Number.isFinite(customEndSec) || customEndSec === null) {
+          hideCountOptions('Enter valid custom end HH:MM:SS.');
+          return;
+        }
+        if (customEndSec <= customStartSec) {
+          hideCountOptions('Custom end must be greater than custom start.');
+          return;
+        }
+        if (customStartSec >= Math.ceil(duration)) {
+          hideCountOptions('Custom start exceeds source duration.');
+          return;
+        }
+        if (customEndSec > Math.ceil(duration)) {
+          hideCountOptions('Custom end exceeds source duration.');
+          return;
+        }
+        cursorSec = customStartSec;
+        effectiveEndSec = customEndSec;
+      }
+      const remainingTimelineSec = Math.max(0, effectiveEndSec - cursorSec);
+      const remaining = Math.max(0, Math.ceil(remainingTimelineSec / seg));
+
+      if (remaining === 0) {
+        setCountOptions(1, `No remaining shorts for ${seg}s on selected source. Choose another duration.`);
+      } else {
+        setCountOptions(
+          remaining,
+          `Selected source allows 1-${remaining} more shorts at ${seg}s from start ${customEnabled ? startTimeInput.value || '00:00:00' : (source.cursor_hhmmss || '00:00:00')}.`
+        );
+      }
+    }
+
+    async function probeSelectedFileDuration() {
+      if (!videoInput.files || videoInput.files.length === 0) {
+        selectedFileDurationSec = null;
+        refreshCountConstraints();
+        return;
+      }
+
+      const myToken = ++durationProbeToken;
+      const file = videoInput.files[0];
+      const url = URL.createObjectURL(file);
+      const probe = document.createElement('video');
+      probe.preload = 'metadata';
+      probe.src = url;
+
+      await new Promise((resolve) => {
+        const finalize = () => {
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        probe.onloadedmetadata = () => {
+          if (myToken === durationProbeToken) {
+            selectedFileDurationSec = Number.isFinite(probe.duration) ? probe.duration : null;
+          }
+          finalize();
+        };
+        probe.onerror = () => {
+          if (myToken === durationProbeToken) {
+            selectedFileDurationSec = null;
+          }
+          finalize();
+        };
+      });
+
+      if (myToken !== durationProbeToken) return;
+      refreshCountConstraints();
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = 'block';
+    }
+
+    function clearError() {
+      errorBox.textContent = '';
+      errorBox.style.display = 'none';
+    }
+
+    function setOverallProgress(value) {
+      const progress = Math.max(0, Math.min(100, Number(value) || 0));
+      overallFill.style.width = `${progress}%`;
+      overallLabel.textContent = `Overall Progress: ${progress.toFixed(1)}%`;
+    }
+
+    function statusClass(status) {
+      if (status === 'completed') return 'ok';
+      if (status === 'cancelled') return 'warn-tx';
+      if (status === 'failed') return 'fail';
+      return '';
+    }
+
+    function renderMemoryPanel(sources, capacity) {
+      cachedSources = sources;
+      const used = sources.length;
+      memoryFill.style.width = `${(used / capacity) * 100}%`;
+      memoryLabel.textContent = `${used} / ${capacity} used`;
+      const memoryFull = used >= capacity;
+      videoInput.disabled = memoryFull;
+      if (memoryFull) {
+        videoInput.value = '';
+        selectedFileDurationSec = null;
+        countHint.textContent = 'Memory full: delete one saved source to enable new upload.';
+      }
+
+      memoryList.innerHTML = '';
+      if (sources.length === 0) {
+        memoryList.innerHTML = '<div class="memory-item"><div class="tiny">No saved source yet.</div></div>';
+        selectedSourceId = null;
+        refreshCountConstraints();
+        return;
+      }
+
+      for (const source of sources) {
+        const item = document.createElement('div');
+        item.className = `memory-item ${selectedSourceId === source.id ? 'active' : ''}`;
+
+        const profileText = Object.entries(source.profiles || {})
+          .map(([dur, done]) => `${dur}s: ${done} ready`)
+          .join(' | ') || 'No shorts generated yet';
+
+        item.innerHTML = `
+          <div class="memory-title">${source.name}</div>
+          <div class="tiny">Duration: ${source.duration_hhmmss}</div>
+          <div class="tiny">Next Start: ${source.cursor_hhmmss || '00:00:00'}</div>
+          <div class="tiny">Profiles: ${profileText}</div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="secondary" data-source-id="${source.id}" data-action="select" type="button" style="min-height:34px;">Select</button>
+            <button class="warn" data-source-id="${source.id}" data-action="delete" type="button" style="min-height:34px;">Delete</button>
+          </div>
+        `;
+
+        memoryList.appendChild(item);
+      }
+
+      memoryList.querySelectorAll('button[data-action="select"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedSourceId = btn.dataset.sourceId || null;
+          renderMemoryPanel(cachedSources, capacity);
+          refreshCountConstraints();
+        });
+      });
+
+      memoryList.querySelectorAll('button[data-action="delete"]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.sourceId;
+          if (!id) return;
+          try {
+            const res = await fetch(`/api/source/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const payload = await res.json().catch(() => ({}));
+              throw new Error(payload.detail || 'Delete failed.');
+            }
+            if (selectedSourceId === id) selectedSourceId = null;
+            await loadSources();
+            refreshCountConstraints();
+          } catch (err) {
+            showError(err.message || 'Delete failed.');
+          }
+        });
+      });
+    }
+
+    async function loadSources() {
+      try {
+        const res = await fetch('/api/sources');
+        if (!res.ok) throw new Error('Failed to load memory records.');
+        const data = await res.json();
+        renderMemoryPanel(data.sources || [], data.capacity || 2);
+        refreshCountConstraints();
+      } catch (err) {
+        showError(err.message || 'Failed to load memory records.');
+      }
+    }
+
+    function renderCards(job) {
+      cards.innerHTML = '';
+
+      if (!job.clips || job.clips.length === 0) {
+        cards.innerHTML = '<div class="card"><h3>Preparing timeline...</h3><div class="skeleton"></div></div>';
+        return;
+      }
+
+      for (const clip of job.clips) {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const progress = Math.max(0, Math.min(100, Number(clip.progress) || 0));
+        const status = clip.status || 'pending';
+
+        let bodyHtml = `
+          <h3>${clip.name}</h3>
+          <div class="meta">Source Timeline: ${clip.timeline}</div>
+          <div class="mini-track"><div class="mini-fill" style="width:${progress}%;"></div></div>
+          <div class="mini-label">${status.toUpperCase()} - ${progress.toFixed(1)}%</div>
+        `;
+
+        if (status === 'done') {
+          bodyHtml += `
+            <video controls preload="metadata">
+              <source src="${clip.url}" type="video/mp4" />
+            </video>
+            <div class="mini-label ok">READY - Play and download now.</div>
+            <a href="${clip.url}" download="${clip.name}">Download ${clip.name}</a>
+          `;
+        } else if (status === 'finalizing') {
+          bodyHtml += `
+            <div class="finalize-wrap">
+              <div class="finalize-track"><div class="finalize-fill"></div></div>
+              <div class="mini-label">Finalizing playable format...</div>
+            </div>
+            <div class="skeleton" style="height:220px;"></div>
+          `;
+        } else if (status === 'cancelled') {
+          bodyHtml += '<div class="skeleton" style="height:180px;"></div><div class="mini-label warn-tx">Cancelled before completion.</div>';
+        } else {
+          bodyHtml += '<div class="skeleton"></div>';
+        }
+
+        card.innerHTML = bodyHtml;
+        cards.appendChild(card);
+      }
+    }
+
+    function updateUi(job) {
+      statusBox.style.display = 'block';
+      statusText.className = statusClass(job.status);
+      statusText.textContent = `Status: ${job.status.toUpperCase()}`;
+
+      if (job.source_duration_hhmmss) {
+        const modeLabel = job.processing_mode === 'all_parallel' ? 'All Parallel' : 'Balanced';
+        const endLabel = job.end_hhmmss || job.source_duration_hhmmss;
+        timelineText.textContent = `Timeline: ${job.start_hhmmss || '00:00:00'} - ${endLabel} | Segment: ${job.segment_seconds}s | Requested: ${job.requested_count} | Mode: ${modeLabel}`;
+      } else {
+        timelineText.textContent = 'Timeline: Preparing source analysis...';
+      }
+
+      setOverallProgress(job.overall_progress || 0);
+      renderCards(job);
+
+      const active = job.status === 'queued' || job.status === 'processing';
+      stopBtn.disabled = !active;
+      uploadGenerateBtn.disabled = active;
+      generateMoreBtn.disabled = active;
+
+      if (job.status === 'failed' && job.error) showError(`Processing failed: ${job.error}`);
+
+      if (!active && pollHandle) {
+        clearInterval(pollHandle);
+        pollHandle = null;
+        loadSources();
+      }
+    }
+
+    async function pollJob() {
+      if (!currentJobId) return;
+      try {
+        const res = await fetch(`/api/job/${currentJobId}`);
+        if (!res.ok) throw new Error('Failed to fetch job status.');
+        const job = await res.json();
+        updateUi(job);
+      } catch (err) {
+        showError(err.message || 'Unable to fetch progress.');
+      }
+    }
+
+    function parseOptions(enforceSelectedSourceLimit = false) {
+      const segment_seconds = Number(segmentSelect.value);
+      const shorts_count = Number(countSelect.value);
+      const processing_mode = String(processingModeInput.value || 'balanced');
+      const use_custom_start = !!useCustomStart.checked;
+      const start_time_hhmmss = String(startTimeInput.value || '').trim();
+      const end_time_hhmmss = String(endTimeInput.value || '').trim();
+      const use_custom_text = !!useCustomText.checked;
+      const text_primary = String(textPrimaryInput.value || '').trim();
+      const text_secondary = String(textSecondaryInput.value || '').trim();
+      const font_key = String(fontKeySelect.value || 'arial');
+      const font_color = String(fontColorInput.value || '#ffffff');
+      const font_size = Math.max(20, Math.min(120, Number(fontSizeInput.value) || 56));
+      const text_position = 'bottom_center';
+      const part_position = 'top_right';
+      const use_pixel_positioning = true;
+      if (!Number.isFinite(segment_seconds) || segment_seconds < 15) throw new Error('Invalid duration.');
+      if (!Number.isFinite(shorts_count) || shorts_count < 1) throw new Error('Invalid shorts count.');
+      if (!countSelect.value) throw new Error('Shorts count is not ready yet. Select a video and wait for duration detection.');
+      if (use_custom_start) {
+        const parsedStart = parseStartToSeconds(start_time_hhmmss);
+        const parsedEnd = parseStartToSeconds(end_time_hhmmss);
+        if (!Number.isFinite(parsedStart) || parsedStart === null) throw new Error('Invalid custom start. Use HH:MM:SS.');
+        if (!Number.isFinite(parsedEnd) || parsedEnd === null) throw new Error('Invalid custom end. Use HH:MM:SS.');
+        if (parsedEnd <= parsedStart) throw new Error('Custom end must be greater than custom start.');
+      }
+      const source = enforceSelectedSourceLimit ? getSelectedSource() : null;
+      if (source) {
+        const duration = Number(source.duration_sec || 0);
+        const cursorSec = use_custom_start ? Number(parseStartToSeconds(start_time_hhmmss)) : Number(source.cursor_sec || 0);
+        const endSec = use_custom_start ? Number(parseStartToSeconds(end_time_hhmmss)) : Math.ceil(duration);
+        const remainingTimelineSec = Math.max(0, endSec - cursorSec);
+        const remaining = Math.max(0, Math.ceil(remainingTimelineSec / segment_seconds));
+        if (shorts_count > remaining) {
+          throw new Error(`Requested shorts exceed remaining available count (${remaining}) for selected source.`);
+        }
+      }
+      return {
+        segment_seconds,
+        shorts_count,
+        processing_mode,
+        use_custom_start,
+        start_time_hhmmss,
+        end_time_hhmmss,
+        use_custom_text,
+        text_primary,
+        text_secondary,
+        font_key,
+        font_color,
+        font_size,
+        text_position,
+        part_position,
+        use_pixel_positioning,
+        text1_x: Math.round(pixelPos.text1_x),
+        text1_y: Math.round(pixelPos.text1_y),
+        text2_x: Math.round(pixelPos.text2_x),
+        text2_y: Math.round(pixelPos.text2_y),
+        part_x: Math.round(pixelPos.part_x),
+        part_y: Math.round(pixelPos.part_y),
+      };
+    }
+
+    function setMode(mode) {
+      activeMode = mode === 'all_parallel' ? 'all_parallel' : 'balanced';
+      processingModeInput.value = activeMode;
+      modeBalancedBtn.classList.toggle('active', activeMode === 'balanced');
+      modeAllBtn.classList.toggle('active', activeMode === 'all_parallel');
+      modeHint.textContent = activeMode === 'all_parallel'
+        ? 'All Parallel uses maximum workers and may heavily load CPU/GPU.'
+        : 'Balanced uses fewer workers for safer CPU/GPU load.';
+    }
+
+    function setSidebarOpen(isOpen) {
+      appLayout.classList.toggle('sidebar-collapsed', !isOpen);
+      logoToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function updateSidePanels(activeTool) {
+      sideShortsPanel.classList.toggle('compact', activeTool !== 'shorts');
+      sideMergePanel.classList.toggle('compact', activeTool !== 'merge');
+      sideDownloaderPanel.classList.toggle('compact', activeTool !== 'downloader');
+    }
+
+    function switchTool(name) {
+      const showAbout = name === 'about';
+      const showShorts = name === 'shorts';
+      const showMerge = name === 'merge';
+      const showDownloader = name === 'downloader';
+      aboutSection.style.display = showAbout ? 'block' : 'none';
+      shortsToolSection.style.display = showShorts ? 'block' : 'none';
+      mergeToolSection.style.display = showMerge ? 'block' : 'none';
+      downloaderToolSection.style.display = showDownloader ? 'block' : 'none';
+      showShortsToolBtn.classList.toggle('active', showShorts);
+      showMergeToolBtn.classList.toggle('active', showMerge);
+      showDownloaderToolBtn.classList.toggle('active', showDownloader);
+      updateSidePanels(showMerge ? 'merge' : showDownloader ? 'downloader' : 'shorts');
+      clearError();
+      hideMergeError();
+      hideDownloaderError();
+      if (showMerge) loadMergeSources();
+      if (showDownloader) loadDownloaderMemory();
+    }
+
+    function setAuthStatus(message, isError = false) {
+      authStatusText.style.color = isError ? '#ffc0d0' : 'var(--muted)';
+      authStatusText.textContent = message || '';
+    }
+
+    function openInfoModal(title, message) {
+      infoModalTitle.textContent = title || 'Notice';
+      infoModalText.textContent = message || 'Coming soon';
+      infoModal.classList.add('open');
+    }
+
+    function closeInfoModal() {
+      infoModal.classList.remove('open');
+    }
+
+    function applyTheme(theme) {
+      document.body.classList.toggle('theme-light', theme === 'light');
+    }
+
+    function applyUser(user) {
+      currentUser = user || null;
+      if (!currentUser) return;
+      applyTheme(String(currentUser.theme || 'dark'));
+    }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          applyUser(data.user);
+          authGate.style.display = 'none';
+          return true;
+        }
+      } catch (err) {
+      }
+      window.location.href = '/';
+      return false;
+    }
+
+    function showMergeError(message) {
+      mergeErrorBox.style.display = 'block';
+      mergeErrorBox.textContent = message;
+    }
+
+    function hideMergeError() {
+      mergeErrorBox.style.display = 'none';
+      mergeErrorBox.textContent = '';
+    }
+
+    function showDownloaderError(message) {
+      downloaderErrorBox.style.display = 'block';
+      downloaderErrorBox.textContent = message;
+    }
+
+    function hideDownloaderError() {
+      downloaderErrorBox.style.display = 'none';
+      downloaderErrorBox.textContent = '';
+    }
+
+    function setDownloaderProgress(pct) {
+      downloaderProgressValue = Math.max(0, Math.min(100, Number(pct) || 0));
+      downloaderProgressFill.style.width = `${downloaderProgressValue}%`;
+      downloaderProgressLabel.textContent = `Progress: ${downloaderProgressValue.toFixed(0)}%`;
+    }
+
+    function setDownloadProfile(profile) {
+      const p = (profile === 'ultra_fast' || profile === 'fast' || profile === 'high_quality') ? profile : 'balanced';
+      downloadProfileInput.value = p;
+      downloadUltraFastBtn.classList.toggle('active', p === 'ultra_fast');
+      downloadFastBtn.classList.toggle('active', p === 'fast');
+      downloadBalancedBtn.classList.toggle('active', p === 'balanced');
+      downloadQualityBtn.classList.toggle('active', p === 'high_quality');
+      downloadProfileHint.textContent = p === 'ultra_fast'
+        ? 'Ultra Fast uses lowest quality for maximum speed.'
+        : (p === 'fast'
+            ? 'Fast prioritizes speed with lighter conversion settings.'
+        : (p === 'high_quality'
+            ? 'High Quality preserves best media quality but may be slower.'
+            : 'Balanced keeps good quality with stable speed.'));
+    }
+
+    function stopDownloaderPolling() {
+      if (downloaderPollHandle) {
+        clearInterval(downloaderPollHandle);
+        downloaderPollHandle = null;
+      }
+      downloaderPollInFlight = false;
+    }
+
+    async function triggerFinalDownloaderFile(jobId, fallbackName) {
+      const res = await fetch(`/api/downloader/file/${jobId}`);
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.detail || 'Failed to fetch downloaded file.');
+      }
+      const blob = await res.blob();
+      const dispo = res.headers.get('Content-Disposition') || '';
+      const match = dispo.match(/filename=\"?([^\";]+)\"?/i);
+      const filename = (match && match[1]) ? match[1] : (fallbackName || 'download.bin');
+      if (window.showSaveFilePicker) {
+        const ext = (filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '').toLowerCase();
+        const picker = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{
+            description: 'Media file',
+            accept: { 'application/octet-stream': [ext || '.bin'] },
+          }],
+        });
+        const writable = await picker.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return;
+      }
+
+      const tmpUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = tmpUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(tmpUrl);
+    }
+
+    function resetDownloaderResult() {
+      downloaderResultBox.style.display = 'none';
+      downloaderResultBox.innerHTML = '';
+    }
+
+    function showDownloaderSkeleton() {
+      downloaderResultBox.style.display = 'grid';
+      downloaderResultBox.innerHTML = `
+        <div class="card">
+          <h3>Preparing preview...</h3>
+          <div class="mini-label">Downloader job started. Media preview will appear once processing completes.</div>
+          <div class="skeleton" style="height:220px;"></div>
+        </div>
+      `;
+    }
+
+    function formatBytes(sizeBytes) {
+      const n = Number(sizeBytes || 0);
+      if (!Number.isFinite(n) || n <= 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      let size = n;
+      let idx = 0;
+      while (size >= 1024 && idx < units.length - 1) {
+        size /= 1024;
+        idx += 1;
+      }
+      return `${size.toFixed(idx === 0 ? 0 : 1)} ${units[idx]}`;
+    }
+
+    function shortFileName(name, maxLen = 46) {
+      const raw = String(name || '').trim();
+      if (!raw) return 'downloaded_file';
+      if (raw.length <= maxLen) return raw;
+      const dot = raw.lastIndexOf('.');
+      if (dot > 0 && dot < raw.length - 1) {
+        const ext = raw.slice(dot);
+        const base = raw.slice(0, dot);
+        const keep = Math.max(10, maxLen - ext.length - 3);
+        return `${base.slice(0, keep)}...${ext}`;
+      }
+      return `${raw.slice(0, Math.max(10, maxLen - 3))}...`;
+    }
+
+    function formatTimer(totalSec) {
+      const sec = Math.max(0, Math.floor(Number(totalSec) || 0));
+      const mm = Math.floor(sec / 60);
+      const ss = sec % 60;
+      return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+    }
+
+    function updateDownloaderTimers(progress) {
+      const nowMs = Date.now();
+      if (!downloaderStartMs) {
+        downloaderTimerLabel.textContent = 'Elapsed: 00:00 | ETA: --:--';
+        return;
+      }
+      const elapsedSec = Math.max(0, Math.floor((Date.now() - downloaderStartMs) / 1000));
+      const p = Number(progress || 0);
+
+      // Keep ETA as a countdown between polls.
+      if (downloaderEtaLastTickMs !== null && Number.isFinite(downloaderEtaSeconds)) {
+        const dt = Math.max(0, (nowMs - downloaderEtaLastTickMs) / 1000);
+        downloaderEtaSeconds = Math.max(0, Number(downloaderEtaSeconds) - dt);
+      }
+      downloaderEtaLastTickMs = nowMs;
+
+      if (p >= 100) {
+        downloaderEtaSeconds = 0;
+      } else if (p > 0 && p < 100) {
+        if (downloaderEtaProgressTs === null) {
+          downloaderEtaProgressTs = nowMs;
+          downloaderEtaProgressRef = p;
+        } else if (p > downloaderEtaProgressRef + 0.05) {
+          const dp = p - downloaderEtaProgressRef;
+          const dt = Math.max(0.001, (nowMs - downloaderEtaProgressTs) / 1000);
+          const candidateEta = Math.max(0, ((100 - p) * dt) / dp);
+          if (Number.isFinite(candidateEta)) {
+            if (!Number.isFinite(downloaderEtaSeconds)) {
+              downloaderEtaSeconds = candidateEta;
+            } else {
+              const blended = (Number(downloaderEtaSeconds) * 0.7) + (candidateEta * 0.3);
+              // User-facing ETA should not keep jumping higher while job is running.
+              downloaderEtaSeconds = Math.min(Number(downloaderEtaSeconds), blended);
+            }
+          }
+          downloaderEtaProgressRef = p;
+          downloaderEtaProgressTs = nowMs;
+        }
+      } else {
+        downloaderEtaSeconds = null;
+        downloaderEtaProgressTs = null;
+        downloaderEtaProgressRef = 0;
+      }
+
+      const etaText = Number.isFinite(downloaderEtaSeconds) ? formatTimer(Number(downloaderEtaSeconds)) : '--:--';
+      downloaderTimerLabel.textContent = `Elapsed: ${formatTimer(elapsedSec)} | ETA: ${etaText}`;
+    }
+
+    function renderDownloaderStoredCards() {
+      downloaderStoredCards.innerHTML = '';
+      if (!cachedDownloaderItems.length) {
+        downloaderStoredCards.innerHTML = '<div class="card"><div class="tiny">No downloaded files in memory yet.</div></div>';
+        return;
+      }
+
+      if (!selectedDownloaderItemId) {
+        downloaderStoredCards.innerHTML = '<div class="card"><div class="tiny">Select and click View from Downloader Memory to preview a result.</div></div>';
+        return;
+      }
+
+      const selectedItem = cachedDownloaderItems.find((item) => item.id === selectedDownloaderItemId);
+      if (!selectedItem) {
+        downloaderStoredCards.innerHTML = '<div class="card"><div class="tiny">Selected item is not available. Choose another file from memory.</div></div>';
+        return;
+      }
+
+      for (const item of [selectedItem]) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const fmt = String(item.output_format || '').toLowerCase();
+        const previewUrl = `${item.preview_url}?t=${Date.now()}`;
+        const createdAt = item.created_at ? String(item.created_at).replace('T', ' ').replace('Z', ' UTC') : '-';
+        card.innerHTML = `
+          <h3 title="${item.file_name || 'downloaded_file'}">${shortFileName(item.file_name || 'downloaded_file')}</h3>
+          <div class="mini-label">Format: ${fmt.toUpperCase()} | Source: ${(item.source || 'other').toString().toUpperCase()} | Size: ${formatBytes(item.size_bytes)}</div>
+          <div class="mini-label">Created: ${createdAt}</div>
+        `;
+
+        if (fmt === 'mp3') {
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = previewUrl;
+          audio.style.width = '100%';
+          audio.style.marginTop = '8px';
+          card.appendChild(audio);
+        } else {
+          const video = document.createElement('video');
+          video.controls = true;
+          video.preload = 'metadata';
+          video.src = previewUrl;
+          card.appendChild(video);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'button-row';
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'secondary';
+        saveBtn.textContent = 'Save File';
+        saveBtn.addEventListener('click', () => {
+          const a = document.createElement('a');
+          a.href = item.file_url;
+          a.download = item.file_name || '';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        });
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'warn';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', async () => {
+          try {
+            const res = await fetch(`/api/downloader/memory/${item.id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const payload = await res.json().catch(() => ({}));
+              throw new Error(payload.detail || 'Failed to delete memory item.');
+            }
+            if (selectedDownloaderItemId === item.id) selectedDownloaderItemId = null;
+            await loadDownloaderMemory();
+          } catch (err) {
+            showDownloaderError(err.message || 'Failed to delete memory item.');
+          }
+        });
+        actions.appendChild(saveBtn);
+        actions.appendChild(deleteBtn);
+        card.appendChild(actions);
+
+        downloaderStoredCards.appendChild(card);
+      }
+    }
+
+    function renderDownloaderMemoryPanel(payload) {
+      const capacity = Number(payload.capacity || 5) || 5;
+      const used = Number(payload.used || 0) || 0;
+      const pct = capacity > 0 ? (used / capacity) * 100 : 0;
+      downloaderMemoryFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+      downloaderMemoryLabel.textContent = `${used} / ${capacity} used`;
+      const memoryFull = used >= capacity;
+      if (!downloaderJobId) {
+        startDownloadBtn.disabled = memoryFull;
+      }
+      if (memoryFull && !downloaderJobId) {
+        downloaderHintText.textContent = 'Downloader memory full. Delete one item to download new content.';
+      }
+
+      cachedDownloaderItems = Array.isArray(payload.items) ? payload.items : [];
+      downloaderMemoryList.innerHTML = '';
+      if (!cachedDownloaderItems.length) {
+        downloaderMemoryList.innerHTML = '<div class="memory-item"><div class="tiny">No downloaded file yet.</div></div>';
+        selectedDownloaderItemId = null;
+        renderDownloaderStoredCards();
+        return;
+      }
+      if (!cachedDownloaderItems.some((item) => item.id === selectedDownloaderItemId)) {
+        selectedDownloaderItemId = null;
+      }
+
+      for (const item of cachedDownloaderItems) {
+        const active = selectedDownloaderItemId === item.id ? 'active' : '';
+        const row = document.createElement('div');
+        row.className = `memory-item ${active}`;
+        row.innerHTML = `
+          <div class="memory-title" title="${item.file_name || 'downloaded_file'}">${shortFileName(item.file_name || 'downloaded_file', 30)}</div>
+          <div class="tiny">${String(item.output_format || '').toUpperCase()} | ${(item.source || 'other').toString().toUpperCase()} | ${formatBytes(item.size_bytes)}</div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="secondary" data-action="select" data-id="${item.id}" type="button" style="min-height:34px;">View</button>
+            <button class="warn" data-action="delete" data-id="${item.id}" type="button" style="min-height:34px;">Delete</button>
+          </div>
+        `;
+        downloaderMemoryList.appendChild(row);
+      }
+
+      downloaderMemoryList.querySelectorAll('button[data-action="select"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedDownloaderItemId = btn.dataset.id || null;
+          renderDownloaderMemoryPanel({ ...payload, items: cachedDownloaderItems, used: cachedDownloaderItems.length, capacity });
+          renderDownloaderStoredCards();
+        });
+      });
+      downloaderMemoryList.querySelectorAll('button[data-action="delete"]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          if (!id) return;
+          try {
+            const res = await fetch(`/api/downloader/memory/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const payloadErr = await res.json().catch(() => ({}));
+              throw new Error(payloadErr.detail || 'Failed to delete memory item.');
+            }
+            if (selectedDownloaderItemId === id) selectedDownloaderItemId = null;
+            await loadDownloaderMemory();
+          } catch (err) {
+            showDownloaderError(err.message || 'Failed to delete memory item.');
+          }
+        });
+      });
+
+      renderDownloaderStoredCards();
+    }
+
+    async function loadDownloaderMemory() {
+      try {
+        const res = await fetch('/api/downloader/memory');
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.detail || 'Failed to load downloader memory.');
+        }
+        const payload = await res.json();
+        renderDownloaderMemoryPanel(payload);
+      } catch (err) {
+        showDownloaderError(err.message || 'Failed to load downloader memory.');
+      }
+    }
+
+    function renderDownloaderResult(job) {
+      const previewUrl = `${String(job.preview_url || '')}?t=${Date.now()}`;
+      const saveName = String(job.file_name || 'downloaded_file');
+      const displayName = shortFileName(saveName);
+      const mediaIsAudio = String(job.output_format || '').toLowerCase() === 'mp3';
+
+      downloaderResultBox.style.display = 'grid';
+      downloaderResultBox.innerHTML = '';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      const title = document.createElement('h3');
+      title.textContent = displayName;
+      title.title = saveName;
+      card.appendChild(title);
+
+      const meta = document.createElement('div');
+      meta.className = 'mini-label';
+      meta.textContent = mediaIsAudio ? 'Audio result is ready.' : 'Video result is ready.';
+      card.appendChild(meta);
+
+      if (mediaIsAudio) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = previewUrl;
+        audio.style.width = '100%';
+        audio.style.marginTop = '8px';
+        card.appendChild(audio);
+      } else {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.src = previewUrl;
+        video.preload = 'metadata';
+        card.appendChild(video);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'button-row';
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.className = 'secondary';
+      saveBtn.textContent = 'Save File';
+      saveBtn.addEventListener('click', async () => {
+        try {
+          await triggerFinalDownloaderFile(String(job.job_id || ''), saveName);
+        } catch (err) {
+          showDownloaderError(err.message || 'Failed to save file.');
+        }
+      });
+      actions.appendChild(saveBtn);
+      card.appendChild(actions);
+
+      downloaderResultBox.appendChild(card);
+    }
+
+    async function pollDownloaderJob() {
+      if (!downloaderJobId || downloaderPollInFlight) return;
+      downloaderPollInFlight = true;
+      try {
+        const res = await fetch(`/api/downloader/job/${downloaderJobId}`);
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          if (res.status === 404) {
+            stopDownloaderPolling();
+            startDownloadBtn.disabled = false;
+            stopDownloadBtn.disabled = true;
+            downloaderStatusText.textContent = 'Status: NOT FOUND';
+            downloaderHintText.textContent = 'Active download session not found. Check Downloader Memory for completed files.';
+            await loadDownloaderMemory();
+            downloaderJobId = null;
+            return;
+          }
+          throw new Error(payload.detail || 'Failed to fetch downloader status.');
+        }
+      const job = await res.json();
+      const status = String(job.status || 'queued').toUpperCase();
+      const progress = Number(job.progress || 0);
+      if (!downloaderStartMs) {
+        const startedAt = Date.parse(String(job.started_at || job.created_at || ''));
+        downloaderStartMs = Number.isFinite(startedAt) ? startedAt : Date.now();
+      }
+      setDownloaderProgress(progress);
+      updateDownloaderTimers(progress);
+      downloaderStatusText.textContent = `Status: ${status}`;
+
+        if (job.status === 'queued') {
+          downloaderHintText.textContent = `Queued... ${job.last_log ? `| ${String(job.last_log).slice(0, 90)}` : ''}`.trim();
+          showDownloaderSkeleton();
+          return;
+        }
+        if (job.status === 'processing') {
+          const prof = String(job.download_profile || 'balanced').replace('_', ' ');
+          const stage = String(job.stage || 'processing').replace(/_/g, ' ');
+          const log = job.last_log ? ` | ${String(job.last_log).slice(0, 95)}` : '';
+          downloaderHintText.textContent = `Stage: ${stage} (${prof}) | ${progress.toFixed(1)}%${log}`;
+          showDownloaderSkeleton();
+          return;
+        }
+        if (job.status === 'completed') {
+        stopDownloaderPolling();
+        setDownloaderProgress(100);
+        updateDownloaderTimers(100);
+        renderDownloaderResult(job);
+          const shortName = shortFileName(job.file_name || 'downloaded file', 40);
+          downloaderHintText.textContent = `Preview ready. Click Save File to keep ${shortName}.`;
+          startDownloadBtn.disabled = false;
+          stopDownloadBtn.disabled = true;
+          downloaderJobId = null;
+          await loadDownloaderMemory();
+          return;
+        }
+
+        if (job.status === 'cancelled') {
+        stopDownloaderPolling();
+        setDownloaderProgress(0);
+        updateDownloaderTimers(0);
+        downloaderStatusText.textContent = 'Status: CANCELLED';
+          downloaderHintText.textContent = 'Download cancelled by user.';
+          startDownloadBtn.disabled = false;
+          stopDownloadBtn.disabled = true;
+          downloaderJobId = null;
+          resetDownloaderResult();
+          return;
+        }
+
+      stopDownloaderPolling();
+      setDownloaderProgress(0);
+      updateDownloaderTimers(0);
+      resetDownloaderResult();
+        downloaderHintText.textContent = 'Please check the link and try again.';
+        startDownloadBtn.disabled = false;
+        stopDownloadBtn.disabled = true;
+        downloaderJobId = null;
+        throw new Error(job.error || 'Download failed.');
+      } finally {
+        downloaderPollInFlight = false;
+      }
+    }
+
+    function clampMergeRect(rect) {
+      rect.x = Math.max(0, Math.min(1080, Math.round(rect.x)));
+      rect.y = Math.max(0, Math.min(1920, Math.round(rect.y)));
+      rect.w = Math.max(120, Math.min(1080, Math.round(rect.w)));
+      rect.h = Math.max(120, Math.min(1920, Math.round(rect.h)));
+    }
+
+    function createTextModel(initialText = '') {
+      const idx = mergeState.texts.length + 1;
+      return {
+        id: `${Date.now()}_${Math.random()}`,
+        text: initialText || `TEXT ${idx}`,
+        color: '#ffffff',
+        size: 48,
+        x: 40,
+        y: 60 + (idx * 70),
+      };
+    }
+
+    function syncAudioLabels() {
+      audio1Label.textContent = `${audio1Range.value}%`;
+      audio2Label.textContent = `${audio2Range.value}%`;
+      mergeState.audio1_pct = Number(audio1Range.value || 0);
+      mergeState.audio2_pct = Number(audio2Range.value || 0);
+    }
+
+    function updateMergeUploadLock() {
+      const full = cachedMergeSources.length >= 2;
+      const useMemory = !!selectedMergeSourceId;
+      const disableUpload = full && !useMemory;
+      mergeVideo1.disabled = disableUpload;
+      mergeVideo2.disabled = disableUpload;
+      mergeVideo1.style.cursor = disableUpload ? 'not-allowed' : '';
+      mergeVideo2.style.cursor = disableUpload ? 'not-allowed' : '';
+    }
+
+    function renderSelectedMergeResults() {
+      const source = cachedMergeSources.find((s) => s.id === selectedMergeSourceId) || null;
+      const results = source && Array.isArray(source.results) ? source.results : [];
+
+      if (!source || results.length === 0) {
+        mergeStoredResults.style.display = 'none';
+        mergeStoredResults.innerHTML = '';
+        return;
+      }
+
+      const latestFirst = [...results].reverse();
+      mergeStoredResults.innerHTML = '';
+      for (const result of latestFirst) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>${result.name || 'merged_output.mp4'}</h3>
+          <div class="tiny">Created: ${result.created_at || '-'}</div>
+          <video controls preload="metadata">
+            <source src="${result.url}" type="video/mp4" />
+          </video>
+          <a href="${result.url}" download="${result.name || 'merged_output.mp4'}">Download ${result.name || 'video'}</a>
+        `;
+        mergeStoredResults.appendChild(card);
+      }
+      mergeStoredResults.style.display = 'grid';
+    }
+
+    function renderMergeMemoryPanel(payload) {
+      const sources = payload.sources || [];
+      cachedMergeSources = sources;
+      const usedVideos = Number(payload.used_videos || (sources.length * 2));
+      const capacityVideos = Number(payload.capacity_videos || 4);
+      const pct = capacityVideos > 0 ? (usedVideos / capacityVideos) * 100 : 0;
+      mergeMemoryFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+      mergeMemoryLabel.textContent = `${usedVideos} / ${capacityVideos} uploaded videos used`;
+
+      if (selectedMergeSourceId && !sources.some((s) => s.id === selectedMergeSourceId)) {
+        selectedMergeSourceId = null;
+      }
+
+      mergeMemoryList.innerHTML = '';
+      if (!sources.length) {
+        mergeMemoryList.innerHTML = '<div class="tiny">No merge memory source yet.</div>';
+        updateMergeUploadLock();
+        return;
+      }
+
+      for (const src of sources) {
+        const item = document.createElement('div');
+        item.className = `memory-item${selectedMergeSourceId === src.id ? ' active' : ''}`;
+        const resultsCount = Number(src.results_count || 0);
+        item.innerHTML = `
+          <div class="memory-title">${src.video1_name} + ${src.video2_name}</div>
+          <div class="tiny">Stored pair | Results: ${resultsCount}</div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="secondary" data-source-id="${src.id}" data-action="select" type="button" style="min-height:34px;">Select</button>
+            <button class="warn" data-source-id="${src.id}" data-action="delete" type="button" style="min-height:34px;">Delete</button>
+          </div>
+        `;
+        mergeMemoryList.appendChild(item);
+      }
+
+      mergeMemoryList.querySelectorAll('button[data-action="select"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.sourceId || null;
+          selectedMergeSourceId = selectedMergeSourceId === id ? null : id;
+          renderMergeMemoryPanel(payload);
+        });
+      });
+      mergeMemoryList.querySelectorAll('button[data-action="delete"]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.sourceId || '';
+          if (!id) return;
+          try {
+            const res = await fetch(`/api/merge/source/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.detail || 'Delete failed.');
+            }
+            if (selectedMergeSourceId === id) selectedMergeSourceId = null;
+            await loadMergeSources();
+          } catch (err) {
+            showMergeError(err.message || 'Delete failed.');
+          }
+        });
+      });
+      updateMergeUploadLock();
+      renderSelectedMergeResults();
+    }
+
+    async function loadMergeSources() {
+      try {
+        const res = await fetch('/api/merge/sources');
+        if (!res.ok) throw new Error('Failed to load merge memory.');
+        const payload = await res.json();
+        renderMergeMemoryPanel(payload);
+      } catch (err) {
+        showMergeError(err.message || 'Failed to load merge memory.');
+      }
+    }
+
+    function renderMergeTextRows() {
+      mergeTextRows.innerHTML = '';
+      if (mergeState.texts.length === 0) {
+        mergeTextRows.innerHTML = '<div class="tiny">No text overlays. Add one if needed.</div>';
+        return;
+      }
+
+      for (const item of mergeState.texts) {
+        const row = document.createElement('div');
+        row.className = 'merge-text-row';
+        row.innerHTML = `
+          <input class="control" type="text" value="${item.text.replace(/"/g, '&quot;')}" />
+          <input class="control" type="color" value="${item.color}" />
+          <button class="warn" type="button">Remove</button>
+        `;
+        const [txt, clr, delBtn] = row.querySelectorAll('input,button');
+        txt.addEventListener('input', () => { item.text = String(txt.value || ''); renderMergeEditor(); });
+        clr.addEventListener('input', () => { item.color = String(clr.value || '#ffffff'); renderMergeEditor(); });
+        delBtn.addEventListener('click', () => {
+          mergeState.texts = mergeState.texts.filter((x) => x.id !== item.id);
+          renderMergeTextRows();
+          renderMergeEditor();
+        });
+        mergeTextRows.appendChild(row);
+      }
+    }
+
+    function applyMergeRectInputs() {
+      mergeState.video1.x = Number(mv1x.value || 0);
+      mergeState.video1.y = Number(mv1y.value || 0);
+      mergeState.video1.w = Number(mv1w.value || 1080);
+      mergeState.video1.h = Number(mv1h.value || 960);
+      mergeState.video2.x = Number(mv2x.value || 0);
+      mergeState.video2.y = Number(mv2y.value || 960);
+      mergeState.video2.w = Number(mv2w.value || 1080);
+      mergeState.video2.h = Number(mv2h.value || 960);
+      clampMergeRect(mergeState.video1);
+      clampMergeRect(mergeState.video2);
+      renderMergeEditor();
+    }
+
+    function bindMergeDrag(elem, onMove) {
+      let offX = 0;
+      let offY = 0;
+      elem.addEventListener('mousedown', (e) => {
+        const r = elem.getBoundingClientRect();
+        offX = e.clientX - r.left;
+        offY = e.clientY - r.top;
+        const onMouseMove = (moveEvent) => {
+          const stage = mergePreviewStage.getBoundingClientRect();
+          onMove((moveEvent.clientX - stage.left - offX) * mergeScale.x, (moveEvent.clientY - stage.top - offY) * mergeScale.y);
+        };
+        const onMouseUp = () => {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+        };
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+    }
+
+    function renderMergeEditor() {
+      clampMergeRect(mergeState.video1);
+      clampMergeRect(mergeState.video2);
+      mv1x.value = String(mergeState.video1.x);
+      mv1y.value = String(mergeState.video1.y);
+      mv1w.value = String(mergeState.video1.w);
+      mv1h.value = String(mergeState.video1.h);
+      mv2x.value = String(mergeState.video2.x);
+      mv2y.value = String(mergeState.video2.y);
+      mv2w.value = String(mergeState.video2.w);
+      mv2h.value = String(mergeState.video2.h);
+
+      mergePreviewStage.innerHTML = '';
+      const v1 = document.createElement('div');
+      v1.className = 'merge-box';
+      v1.textContent = 'VIDEO 1';
+      v1.style.left = `${Math.round(mergeState.video1.x / mergeScale.x)}px`;
+      v1.style.top = `${Math.round(mergeState.video1.y / mergeScale.y)}px`;
+      v1.style.width = `${Math.round(mergeState.video1.w / mergeScale.x)}px`;
+      v1.style.height = `${Math.round(mergeState.video1.h / mergeScale.y)}px`;
+      mergePreviewStage.appendChild(v1);
+      bindMergeDrag(v1, (x, y) => {
+        mergeState.video1.x = x;
+        mergeState.video1.y = y;
+        renderMergeEditor();
+      });
+
+      const v2 = document.createElement('div');
+      v2.className = 'merge-box';
+      v2.style.borderColor = 'rgba(255, 47, 179, 0.9)';
+      v2.style.background = 'rgba(255, 47, 179, 0.16)';
+      v2.textContent = 'VIDEO 2';
+      v2.style.left = `${Math.round(mergeState.video2.x / mergeScale.x)}px`;
+      v2.style.top = `${Math.round(mergeState.video2.y / mergeScale.y)}px`;
+      v2.style.width = `${Math.round(mergeState.video2.w / mergeScale.x)}px`;
+      v2.style.height = `${Math.round(mergeState.video2.h / mergeScale.y)}px`;
+      mergePreviewStage.appendChild(v2);
+      bindMergeDrag(v2, (x, y) => {
+        mergeState.video2.x = x;
+        mergeState.video2.y = y;
+        renderMergeEditor();
+      });
+
+      mergeTextPosControls.innerHTML = '<strong>Text Positions</strong>';
+      for (const txt of mergeState.texts) {
+        const t = document.createElement('div');
+        t.className = 'merge-txt';
+        t.textContent = txt.text || 'TEXT';
+        t.style.color = txt.color;
+        t.style.fontSize = `${Math.max(12, Math.round(txt.size / 3))}px`;
+        t.style.left = `${Math.round(txt.x / mergeScale.x)}px`;
+        t.style.top = `${Math.round(txt.y / mergeScale.y)}px`;
+        mergePreviewStage.appendChild(t);
+        bindMergeDrag(t, (x, y) => {
+          txt.x = Math.max(0, Math.min(1080, Math.round(x)));
+          txt.y = Math.max(0, Math.min(1920, Math.round(y)));
+          renderMergeEditor();
+        });
+
+        const p = document.createElement('div');
+        p.className = 'xy-row';
+        p.innerHTML = `
+          <input class="control" type="number" min="0" max="1080" value="${txt.x}" />
+          <input class="control" type="number" min="0" max="1920" value="${txt.y}" />
+          <input class="control" type="number" min="16" max="120" value="${txt.size}" />
+        `;
+        const [xIn, yIn, sIn] = p.querySelectorAll('input');
+        xIn.addEventListener('input', () => { txt.x = Number(xIn.value || 0); renderMergeEditor(); });
+        yIn.addEventListener('input', () => { txt.y = Number(yIn.value || 0); renderMergeEditor(); });
+        sIn.addEventListener('input', () => { txt.size = Number(sIn.value || 48); renderMergeEditor(); });
+        mergeTextPosControls.appendChild(document.createTextNode(txt.text || 'Text'));
+        mergeTextPosControls.appendChild(p);
+      }
+    }
+
+    function mergePayload() {
+      return {
+        video1: { ...mergeState.video1 },
+        video2: { ...mergeState.video2 },
+        audio1_pct: mergeState.audio1_pct,
+        audio2_pct: mergeState.audio2_pct,
+        texts: mergeState.texts
+          .map((t) => ({ text: String(t.text || '').trim(), color: t.color, size: Number(t.size || 48), x: Number(t.x || 0), y: Number(t.y || 0) }))
+          .filter((t) => t.text.length > 0),
+      };
+    }
+
+    function setMergeProgress(pct) {
+      const v = Math.max(0, Math.min(100, Number(pct) || 0));
+      mergeProgressFill.style.width = `${v}%`;
+      mergeProgressLabel.textContent = `Progress: ${v.toFixed(1)}%`;
+    }
+
+    function showMergeProcessingSkeleton() {
+      mergeStoredResults.style.display = 'grid';
+      mergeStoredResults.innerHTML = `
+        <div class="card">
+          <h3>Preparing merged video...</h3>
+          <div class="mini-label">Rendering timeline, compositing layers, and finalizing output.</div>
+          <div class="skeleton" style="height:220px;"></div>
+        </div>
+      `;
+    }
+
+    async function pollMergeJob() {
+      if (!mergeJobId) return;
+      try {
+        const res = await fetch(`/api/merge/job/${mergeJobId}`);
+        if (!res.ok) throw new Error('Failed to fetch merge status.');
+        const job = await res.json();
+        mergeStatusBox.style.display = 'block';
+        mergeStatusText.textContent = `Status: ${String(job.status || 'queued').toUpperCase()}`;
+        setMergeProgress(job.progress || 0);
+        if (job.status === 'queued' || job.status === 'processing') {
+          showMergeProcessingSkeleton();
+        }
+        if (job.status === 'completed') {
+          if (mergePollHandle) {
+            clearInterval(mergePollHandle);
+            mergePollHandle = null;
+          }
+          startMergeBtn.disabled = false;
+          stopMergeBtn.disabled = true;
+          await loadMergeSources();
+        } else if (job.status === 'cancelled') {
+          if (mergePollHandle) {
+            clearInterval(mergePollHandle);
+            mergePollHandle = null;
+          }
+          startMergeBtn.disabled = false;
+          stopMergeBtn.disabled = true;
+          mergeStatusText.textContent = 'Status: CANCELLED';
+          setMergeProgress(0);
+          mergeStoredResults.style.display = 'none';
+          mergeStoredResults.innerHTML = '';
+        } else if (job.status === 'failed') {
+          if (mergePollHandle) {
+            clearInterval(mergePollHandle);
+            mergePollHandle = null;
+          }
+          startMergeBtn.disabled = false;
+          stopMergeBtn.disabled = true;
+          showMergeError(job.error || 'Merge failed.');
+        } else {
+          stopMergeBtn.disabled = false;
+        }
+      } catch (err) {
+        showMergeError(err.message || 'Unable to fetch merge progress.');
+      }
+    }
+
+    async function startPolling(jobId) {
+      currentJobId = jobId;
+      stopBtn.disabled = false;
+      await pollJob();
+      pollHandle = setInterval(pollJob, 1000);
+    }
+
+    uploadForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearError();
+
+      if (!videoInput.files || videoInput.files.length === 0) {
+        showError('Select a video file for upload.');
+        return;
+      }
+
+      const {
+        segment_seconds,
+        shorts_count,
+        processing_mode,
+        use_custom_start,
+        start_time_hhmmss,
+        end_time_hhmmss,
+        use_custom_text,
+        text_primary,
+        text_secondary,
+        font_key,
+        font_color,
+        font_size,
+        text_position,
+        part_position,
+        use_pixel_positioning,
+        text1_x,
+        text1_y,
+        text2_x,
+        text2_y,
+        part_x,
+        part_y,
+      } = parseOptions(false);
+
+      if (pollHandle) {
+        clearInterval(pollHandle);
+        pollHandle = null;
+      }
+
+      const formData = new FormData();
+      formData.append('file', videoInput.files[0]);
+      formData.append('segment_seconds', String(segment_seconds));
+      formData.append('shorts_count', String(shorts_count));
+      formData.append('processing_mode', processing_mode);
+      formData.append('use_custom_start', String(use_custom_start));
+      formData.append('start_time_hhmmss', start_time_hhmmss);
+      formData.append('end_time_hhmmss', end_time_hhmmss);
+      formData.append('use_custom_text', String(use_custom_text));
+      formData.append('text_primary', text_primary);
+      formData.append('text_secondary', text_secondary);
+      formData.append('font_key', font_key);
+      formData.append('font_color', font_color);
+      formData.append('font_size', String(font_size));
+      formData.append('text_position', text_position);
+      formData.append('part_position', part_position);
+      formData.append('use_pixel_positioning', String(use_pixel_positioning));
+      formData.append('text1_x', String(text1_x));
+      formData.append('text1_y', String(text1_y));
+      formData.append('text2_x', String(text2_x));
+      formData.append('text2_y', String(text2_y));
+      formData.append('part_x', String(part_x));
+      formData.append('part_y', String(part_y));
+
+      uploadGenerateBtn.disabled = true;
+      generateMoreBtn.disabled = true;
+      stopBtn.disabled = true;
+      statusBox.style.display = 'block';
+      statusText.textContent = 'Status: UPLOADING';
+      timelineText.textContent = 'Timeline: Waiting for server...';
+      setOverallProgress(0);
+      cards.innerHTML = '<div class="card"><h3>Initializing...</h3><div class="skeleton"></div></div>';
+
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.detail || 'Upload failed.');
+        }
+        const data = await res.json();
+        selectedSourceId = data.source_id || null;
+        await loadSources();
+        await startPolling(data.job_id);
+      } catch (err) {
+        uploadGenerateBtn.disabled = false;
+        generateMoreBtn.disabled = false;
+        stopBtn.disabled = true;
+        showError(err.message || 'Failed to start processing.');
+      }
+    });
+
+    generateMoreBtn.addEventListener('click', async () => {
+      clearError();
+      if (!selectedSourceId) {
+        showError('Select one saved source from Memory Bank first.');
+        return;
+      }
+
+      const {
+        segment_seconds,
+        shorts_count,
+        processing_mode,
+        use_custom_start,
+        start_time_hhmmss,
+        end_time_hhmmss,
+        use_custom_text,
+        text_primary,
+        text_secondary,
+        font_key,
+        font_color,
+        font_size,
+        text_position,
+        part_position,
+        use_pixel_positioning,
+        text1_x,
+        text1_y,
+        text2_x,
+        text2_y,
+        part_x,
+        part_y,
+      } = parseOptions(true);
+
+      if (pollHandle) {
+        clearInterval(pollHandle);
+        pollHandle = null;
+      }
+
+      uploadGenerateBtn.disabled = true;
+      generateMoreBtn.disabled = true;
+      stopBtn.disabled = true;
+      statusBox.style.display = 'block';
+      statusText.textContent = 'Status: QUEUED';
+      timelineText.textContent = 'Timeline: Starting memory resume...';
+      setOverallProgress(0);
+      cards.innerHTML = '<div class="card"><h3>Resuming from memory...</h3><div class="skeleton"></div></div>';
+
+      try {
+        const res = await fetch(`/api/source/${selectedSourceId}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            segment_seconds,
+            shorts_count,
+            processing_mode,
+            use_custom_start,
+            start_time_hhmmss,
+            end_time_hhmmss,
+            use_custom_text,
+            text_primary,
+            text_secondary,
+            font_key,
+            font_color,
+            font_size,
+            text_position,
+            part_position,
+            use_pixel_positioning,
+            text1_x,
+            text1_y,
+            text2_x,
+            text2_y,
+            part_x,
+            part_y,
+          }),
+        });
+
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.detail || 'Failed to generate from memory.');
+        }
+
+        const data = await res.json();
+        await startPolling(data.job_id);
+      } catch (err) {
+        uploadGenerateBtn.disabled = false;
+        generateMoreBtn.disabled = false;
+        stopBtn.disabled = true;
+        showError(err.message || 'Failed to resume processing.');
+      }
+    });
+
+    stopBtn.addEventListener('click', async () => {
+      if (!currentJobId) return;
+      try {
+        const res = await fetch(`/api/cancel/${currentJobId}`, { method: 'POST' });
+        if (!res.ok) throw new Error('Failed to stop processing.');
+        stopBtn.disabled = true;
+      } catch (err) {
+        showError(err.message || 'Unable to stop processing.');
+      }
+    });
+
+    modeBalancedBtn.addEventListener('click', () => setMode('balanced'));
+    modeAllBtn.addEventListener('click', () => setMode('all_parallel'));
+    useCustomStart.addEventListener('change', () => {
+      startTimeInput.style.display = useCustomStart.checked ? 'inline-block' : 'none';
+      endTimeInput.style.display = useCustomStart.checked ? 'inline-block' : 'none';
+      startHint.textContent = useCustomStart.checked
+        ? 'Custom range enabled. Enter start and end as HH:MM:SS.'
+        : 'Default start: auto from memory cursor.';
+      refreshCountConstraints();
+    });
+    useCustomText.addEventListener('change', toggleCustomTextControls);
+    startTimeInput.addEventListener('input', refreshCountConstraints);
+    endTimeInput.addEventListener('input', refreshCountConstraints);
+    openPositionEditorBtn.addEventListener('click', () => {
+      if (!useCustomText.checked) return;
+      syncAllPositionUi();
+      posModal.style.display = 'flex';
+    });
+    closePositionEditorBtn.addEventListener('click', () => {
+      posModal.style.display = 'none';
+    });
+    posModal.addEventListener('click', (e) => {
+      if (e.target === posModal) posModal.style.display = 'none';
+    });
+    text1XInput.addEventListener('input', () => { pixelPos.text1_x = Number(text1XInput.value || 0); syncAllPositionUi(); });
+    text1YInput.addEventListener('input', () => { pixelPos.text1_y = Number(text1YInput.value || 0); syncAllPositionUi(); });
+    text2XInput.addEventListener('input', () => { pixelPos.text2_x = Number(text2XInput.value || 0); syncAllPositionUi(); });
+    text2YInput.addEventListener('input', () => { pixelPos.text2_y = Number(text2YInput.value || 0); syncAllPositionUi(); });
+    partXInput.addEventListener('input', () => { pixelPos.part_x = Number(partXInput.value || 0); syncAllPositionUi(); });
+    partYInput.addEventListener('input', () => { pixelPos.part_y = Number(partYInput.value || 0); syncAllPositionUi(); });
+    text1NudgeBtn.addEventListener('click', () => { pixelPos.text1_x += 1; pixelPos.text1_y += 1; syncAllPositionUi(); });
+    text2NudgeBtn.addEventListener('click', () => { pixelPos.text2_x += 1; pixelPos.text2_y += 1; syncAllPositionUi(); });
+    partNudgeBtn.addEventListener('click', () => { pixelPos.part_x += 1; pixelPos.part_y += 1; syncAllPositionUi(); });
+    bindDrag(dragText1, 'text1_x', 'text1_y');
+    bindDrag(dragText2, 'text2_x', 'text2_y');
+    bindDrag(dragPart, 'part_x', 'part_y');
+    sendOtpBtn.addEventListener('click', async () => {
+      const email = String(authEmailInput.value || '').trim();
+      if (!email) {
+        setAuthStatus('Enter your email first.', true);
+        return;
+      }
+      setAuthStatus('Sending OTP...');
+      const fd = new FormData();
+      fd.append('email', email);
+      try {
+        const res = await fetch('/api/auth/request-otp', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to send OTP.');
+        setAuthStatus(data.message || 'OTP sent.');
+      } catch (err) {
+        setAuthStatus(err.message || 'Failed to send OTP.', true);
+      }
+    });
+    verifyOtpBtn.addEventListener('click', async () => {
+      const email = String(authEmailInput.value || '').trim();
+      const otp = String(authOtpInput.value || '').trim();
+      const name = String(authNameInput.value || '').trim();
+      if (!email || !otp) {
+        setAuthStatus('Email and OTP are required.', true);
+        return;
+      }
+      setAuthStatus('Verifying...');
+      const fd = new FormData();
+      fd.append('email', email);
+      fd.append('otp_code', otp);
+      fd.append('username', name);
+      try {
+        const res = await fetch('/api/auth/verify-otp', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'OTP verification failed.');
+        applyUser(data.user || null);
+        setAuthStatus('Login successful.');
+        authGate.style.display = 'none';
+      } catch (err) {
+        setAuthStatus(err.message || 'OTP verification failed.', true);
+      }
+    });
+    profileBtn.addEventListener('click', () => {
+      profilePopup.classList.add('open');
+    });
+    profilePopupCloseBtn.addEventListener('click', () => {
+      profilePopup.classList.remove('open');
+    });
+    profilePopup.addEventListener('click', (event) => {
+      if (event.target === profilePopup) profilePopup.classList.remove('open');
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') profilePopup.classList.remove('open');
+    });
+    menuSettingsBtn.addEventListener('click', () => {
+      profilePopup.classList.remove('open');
+      window.location.href = '/settings';
+    });
+    menuHelpBtn.addEventListener('click', () => {
+      profilePopup.classList.remove('open');
+      openInfoModal('Help', 'Coming soon');
+    });
+    menuUpgradeBtn.addEventListener('click', () => {
+      profilePopup.classList.remove('open');
+      openInfoModal('Upgrade', 'Coming soon');
+    });
+    menuLogoutBtn.addEventListener('click', async () => {
+      profilePopup.classList.remove('open');
+      logoutConfirmModal.classList.add('open');
+    });
+    logoutCancelBtn.addEventListener('click', () => {
+      logoutConfirmModal.classList.remove('open');
+    });
+    logoutConfirmBtn.addEventListener('click', async () => {
+      logoutConfirmModal.classList.remove('open');
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/';
+    });
+    logoutConfirmModal.addEventListener('click', (event) => {
+      if (event.target === logoutConfirmModal) logoutConfirmModal.classList.remove('open');
+    });
+    infoModalCloseBtn.addEventListener('click', closeInfoModal);
+    infoModal.addEventListener('click', (event) => {
+      if (event.target === infoModal) closeInfoModal();
+    });
+    logoToggleBtn.addEventListener('click', () => {
+      const willOpen = appLayout.classList.contains('sidebar-collapsed');
+      setSidebarOpen(willOpen);
+    });
+    showShortsToolBtn.addEventListener('click', () => { setSidebarOpen(true); switchTool('shorts'); });
+    showMergeToolBtn.addEventListener('click', () => { setSidebarOpen(true); switchTool('merge'); });
+    showDownloaderToolBtn.addEventListener('click', () => { setSidebarOpen(true); switchTool('downloader'); });
+    downloadUltraFastBtn.addEventListener('click', () => setDownloadProfile('ultra_fast'));
+    downloadFastBtn.addEventListener('click', () => setDownloadProfile('fast'));
+    downloadBalancedBtn.addEventListener('click', () => setDownloadProfile('balanced'));
+    downloadQualityBtn.addEventListener('click', () => setDownloadProfile('high_quality'));
+    showDownloaderMemoryBtn.addEventListener('click', () => {
+      setSidebarOpen(true);
+      switchTool('downloader');
+      downloaderMemorySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    audio1Range.addEventListener('input', syncAudioLabels);
+    audio2Range.addEventListener('input', syncAudioLabels);
+    [mv1x, mv1y, mv1w, mv1h, mv2x, mv2y, mv2w, mv2h].forEach((el) => el.addEventListener('input', applyMergeRectInputs));
+    addMergeTextBtn.addEventListener('click', () => {
+      mergeState.texts.push(createTextModel(''));
+      renderMergeTextRows();
+      renderMergeEditor();
+    });
+    openMergeEditorBtn.addEventListener('click', () => {
+      renderMergeEditor();
+      mergeEditorModal.style.display = 'flex';
+    });
+    closeMergeEditorBtn.addEventListener('click', () => {
+      mergeEditorModal.style.display = 'none';
+    });
+    mergeEditorModal.addEventListener('click', (e) => {
+      if (e.target === mergeEditorModal) mergeEditorModal.style.display = 'none';
+    });
+    mergeForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      hideMergeError();
+      const usingMemorySource = !!selectedMergeSourceId;
+      if (!usingMemorySource) {
+        if (!mergeVideo1.files || mergeVideo1.files.length === 0 || !mergeVideo2.files || mergeVideo2.files.length === 0) {
+          showMergeError('Select both videos first or select a stored pair from merge memory.');
+          return;
+        }
+      }
+      if (mergePollHandle) {
+        clearInterval(mergePollHandle);
+        mergePollHandle = null;
+      }
+
+      const formData = new FormData();
+      if (!usingMemorySource) {
+        formData.append('video1', mergeVideo1.files[0]);
+        formData.append('video2', mergeVideo2.files[0]);
+      }
+      formData.append('source_id', selectedMergeSourceId || '');
+      formData.append('settings_json', JSON.stringify(mergePayload()));
+      mergeStatusBox.style.display = 'block';
+      mergeStatusText.textContent = 'Status: UPLOADING';
+      setMergeProgress(0);
+      showMergeProcessingSkeleton();
+      startMergeBtn.disabled = true;
+      stopMergeBtn.disabled = false;
+
+      try {
+        const res = await fetch('/api/merge/process', { method: 'POST', body: formData });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.detail || 'Failed to start merge.');
+        }
+        const data = await res.json();
+        mergeJobId = data.job_id;
+        if (data.source_id) selectedMergeSourceId = data.source_id;
+        await loadMergeSources();
+        await pollMergeJob();
+        mergePollHandle = setInterval(pollMergeJob, 1000);
+      } catch (err) {
+        startMergeBtn.disabled = false;
+        stopMergeBtn.disabled = true;
+        showMergeError(err.message || 'Failed to start merge.');
+      }
+    });
+    stopMergeBtn.addEventListener('click', async () => {
+      if (!mergeJobId) return;
+      try {
+        const res = await fetch(`/api/merge/cancel/${mergeJobId}`, { method: 'POST' });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.detail || 'Failed to cancel merge job.');
+        }
+        stopMergeBtn.disabled = true;
+        mergeStatusText.textContent = 'Status: CANCELLING';
+      } catch (err) {
+        showMergeError(err.message || 'Failed to cancel merge job.');
+      }
+    });
+    downloaderForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      hideDownloaderError();
+      stopDownloaderPolling();
+      downloaderJobId = null;
+      downloaderStartMs = Date.now();
+      downloaderEtaSeconds = null;
+      downloaderEtaLastTickMs = null;
+      downloaderEtaProgressRef = 0;
+      downloaderEtaProgressTs = null;
+      resetDownloaderResult();
+      const link = String(downloadUrlInput.value || '').trim();
+      if (!link) {
+        showDownloaderError('Paste a valid link first.');
+        return;
+      }
+
+      const source = String(downloadSourceSelect.value || 'other');
+      const output_format = String(downloadFormatSelect.value || 'mp4');
+      const download_profile = String(downloadProfileInput.value || 'balanced');
+      const formData = new FormData();
+      formData.append('url', link);
+      formData.append('source', source);
+      formData.append('output_format', output_format);
+      formData.append('download_profile', download_profile);
+
+      startDownloadBtn.disabled = true;
+      downloaderStatusBox.style.display = 'block';
+      downloaderStatusText.textContent = 'Status: QUEUED';
+      downloaderHintText.textContent = `Starting download job (${download_profile.replace('_', ' ')})...`;
+      setDownloaderProgress(0);
+      updateDownloaderTimers(0);
+      showDownloaderSkeleton();
+      stopDownloadBtn.disabled = false;
+
+      try {
+        const res = await fetch('/api/downloader/start', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.detail || 'Download failed.');
+        }
+
+        const data = await res.json();
+        downloaderJobId = data.job_id;
+        await pollDownloaderJob();
+        downloaderPollHandle = setInterval(async () => {
+          try {
+            await pollDownloaderJob();
+          } catch (pollErr) {
+            stopDownloaderPolling();
+            downloaderStatusText.textContent = 'Status: FAILED';
+            showDownloaderError(pollErr.message || 'Failed to fetch download status.');
+          }
+        }, 2500);
+      } catch (err) {
+        setDownloaderProgress(0);
+        updateDownloaderTimers(0);
+        downloaderStatusText.textContent = 'Status: FAILED';
+        downloaderHintText.textContent = 'Please check the link and try again.';
+        showDownloaderError(err.message || 'Failed to download media.');
+        startDownloadBtn.disabled = false;
+        stopDownloadBtn.disabled = true;
+      }
+    });
+    stopDownloadBtn.addEventListener('click', async () => {
+      if (!downloaderJobId) return;
+      try {
+        const res = await fetch(`/api/downloader/cancel/${downloaderJobId}`, { method: 'POST' });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.detail || 'Failed to stop download.');
+        }
+        stopDownloadBtn.disabled = true;
+        downloaderStatusText.textContent = 'Status: CANCELLING';
+        downloaderHintText.textContent = 'Stopping active downloader process...';
+      } catch (err) {
+        showDownloaderError(err.message || 'Failed to stop download.');
+      }
+    });
+    videoInput.addEventListener('change', () => {
+      selectedSourceId = null;
+      probeSelectedFileDuration();
+      renderMemoryPanel(cachedSources, 2);
+    });
+    segmentSelect.addEventListener('change', refreshCountConstraints);
+    setMode('balanced');
+    toggleCustomTextControls();
+    syncAllPositionUi();
+    syncAudioLabels();
+    mergeState.texts = [createTextModel('TITLE 1'), createTextModel('TITLE 2')];
+    renderMergeTextRows();
+    renderMergeEditor();
+    setDownloadProfile('balanced');
+    setSidebarOpen(true);
+    switchTool('shorts');
+    hideCountOptions('Shorts counter appears after video duration is known.');
+    checkAuth().then((ok) => {
+      if (ok) {
+        loadMergeSources();
+        loadDownloaderMemory();
+        loadSources();
+      }
+    });
+  </script>
+</body>
+</html>

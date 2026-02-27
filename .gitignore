@@ -1,0 +1,23 @@
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+
+# Secrets
+.env
+*.env
+
+# Local runtime data
+video_shorts_generator/auth.db
+video_shorts_generator/uploads/
+video_shorts_generator/clips/
+video_shorts_generator/downloads/
+video_shorts_generator/merge_uploads/
+video_shorts_generator/merge_clips/
+video_shorts_generator/__pycache__/
+video_shorts_generator/static/avatars/

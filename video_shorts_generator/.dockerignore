@@ -1,0 +1,13 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+auth.db
+uploads
+clips
+downloads
+merge_uploads
+merge_clips
+*.log
+.env

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipMint Admin Panel</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2d;
+      --panel-2: #17233b;
+      --text: #e8f0ff;
+      --muted: #9fb1d1;
+      --line: #253657;
+      --ok: #4fd1a2;
+      --warn: #ffcc66;
+      --accent: #6ca8ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: radial-gradient(circle at 10% 0%, #162746 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .topbar {
+      background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .title {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .links {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .card h3 {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .value {
+      margin-top: 8px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .muted { color: var(--muted); font-size: 12px; }
+    .status {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0f1a30;
+      color: var(--text);
+      font-size: 13px;
+    }
+    .hash {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 11px;
+      word-break: break-all;
+      max-width: 240px;
+    }
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      border: 1px solid var(--line);
+      background: #152744;
+      color: var(--text);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+    .action-btn:hover { border-color: var(--accent); }
+    .action-danger { background: #3b1a24; border-color: #6b3042; }
+    .tables {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .table-head {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #0e182b;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .table-scroll {
+      overflow: auto;
+      max-height: 290px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    th { color: var(--muted); background: #111d33; position: sticky; top: 0; }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 8, 18, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      padding: 16px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      width: min(440px, 100%);
+      background: #111f38;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 24px 40px rgba(0, 0, 0, 0.45);
+    }
+    .modal-title {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .modal-text {
+      margin: 10px 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .modal-btn {
+      border: 1px solid var(--line);
+      background: #152744;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .modal-btn:hover { border-color: var(--accent); }
+    .modal-btn-danger {
+      background: #4a1f2f;
+      border-color: #76364d;
+    }
+    @media (max-width: 920px) {
+      .grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+      .topbar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div>
+        <h1 class="title">ClipMint Admin Panel</h1>
+        <div class="meta">Signed in as {{ admin.username }} | DB backend: {{ db_backend }}</div>
+      </div>
+      <div class="links">
+        <button class="btn" type="button" onclick="window.location.reload()">Refresh</button>
+        <form method="post" action="/admin/logout" style="margin:0;">
+          <button class="btn" type="submit">Logout</button>
+        </form>
+        <a class="btn" href="/app">Back to App</a>
+      </div>
+    </header>
+    {% if status_msg %}
+    <div class="status">{{ status_msg }}</div>
+    {% endif %}
+
+    <section class="grid">
+      <article class="card">
+        <h3>Total Users</h3>
+        <div class="value">{{ metrics.users_count }}</div>
+      </article>
+      <article class="card">
+        <h3>Total Sessions</h3>
+        <div class="value">{{ metrics.sessions_count }}</div>
+      </article>
+      <article class="card">
+        <h3>Active Sessions</h3>
+        <div class="value ok">{{ metrics.active_sessions }}</div>
+      </article>
+      <article class="card">
+        <h3>Pending OTP</h3>
+        <div class="value warn">{{ metrics.otp_pending }}</div>
+      </article>
+      <article class="card">
+        <h3>Paused Users</h3>
+        <div class="value">{{ metrics.paused_users }}</div>
+      </article>
+    </section>
+
+    <section class="tables">
+      <article class="table-wrap">
+        <div class="table-head">Recent Users</div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Status</th>
+                <th>Theme</th>
+                <th>Password Hash</th>
+                <th>Created</th>
+                <th>Last Login</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in recent_users %}
+              <tr>
+                <td>{{ row.email }}</td>
+                <td>{{ row.username }}</td>
+                <td>{{ row.account_status }}</td>
+                <td>{{ row.theme }}</td>
+                <td class="hash">{{ row.password_hash or "-" }}</td>
+                <td>{{ row.created_at }}</td>
+                <td>{{ row.last_login_at }}</td>
+                <td>
+                  <form method="post" action="/admin/users/action" class="actions">
+                    <input type="hidden" name="email" value="{{ row.email }}" />
+                    <button class="action-btn" type="button" data-action="pause" data-email="{{ row.email }}">Pause</button>
+                    <button class="action-btn" type="button" data-action="continue" data-email="{{ row.email }}">Continue</button>
+                    <button class="action-btn action-danger" type="button" data-action="delete" data-email="{{ row.email }}">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="table-wrap">
+        <div class="table-head">Recent Sessions</div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Created</th>
+                <th>Expires</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in recent_sessions %}
+              <tr>
+                <td>{{ row.email }}</td>
+                <td>{{ row.created_at }}</td>
+                <td>{{ row.expires_at }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="table-wrap">
+        <div class="table-head">Recent OTP Requests</div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Created</th>
+                <th>Expires</th>
+                <th>Attempts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in recent_otps %}
+              <tr>
+                <td>{{ row.email }}</td>
+                <td>{{ row.created_at }}</td>
+                <td>{{ row.expires_at }}</td>
+                <td>{{ row.attempts }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="actionModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 class="modal-title" id="modalTitle">Confirm Action</h2>
+      <p class="modal-text" id="modalText"></p>
+      <form method="post" action="/admin/users/action" id="modalForm">
+        <input type="hidden" name="email" id="modalEmail" value="" />
+        <input type="hidden" name="action" id="modalAction" value="" />
+        <div class="modal-actions">
+          <button type="button" class="modal-btn" id="modalCancel">Cancel</button>
+          <button type="submit" class="modal-btn modal-btn-danger" id="modalConfirm">Confirm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const modal = document.getElementById("actionModal");
+      const modalText = document.getElementById("modalText");
+      const modalEmail = document.getElementById("modalEmail");
+      const modalAction = document.getElementById("modalAction");
+      const modalConfirm = document.getElementById("modalConfirm");
+      const modalCancel = document.getElementById("modalCancel");
+
+      function closeModal() {
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      function openModal(action, email) {
+        modalEmail.value = email;
+        modalAction.value = action;
+        if (action === "delete") {
+          modalText.textContent = "Delete user " + email + "? This cannot be undone.";
+          modalConfirm.textContent = "Delete";
+          modalConfirm.classList.add("modal-btn-danger");
+        } else if (action === "pause") {
+          modalText.textContent = "Pause user " + email + "? User will be logged out and blocked from login.";
+          modalConfirm.textContent = "Pause";
+          modalConfirm.classList.remove("modal-btn-danger");
+        } else {
+          modalText.textContent = "Continue user " + email + "? User login access will be restored.";
+          modalConfirm.textContent = "Continue";
+          modalConfirm.classList.remove("modal-btn-danger");
+        }
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+      }
+
+      document.querySelectorAll("[data-action]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          openModal(btn.getAttribute("data-action"), btn.getAttribute("data-email"));
+        });
+      });
+
+      modalCancel.addEventListener("click", closeModal);
+      modal.addEventListener("click", function (evt) {
+        if (evt.target === modal) closeModal();
+      });
+      document.addEventListener("keydown", function (evt) {
+        if (evt.key === "Escape") closeModal();
+      });
+    })();
+  </script>
+</body>
+</html>

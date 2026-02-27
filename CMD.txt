@@ -1,0 +1,1 @@
+E:\MOVIES_CLIP_CHAMP\video_shorts_generator>py -m uvicorn main:app --host 127.0.0.1 --port 8000

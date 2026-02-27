@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipMint Settings</title>
+  <style>
+    :root {
+      --bg: #090f23;
+      --panel: #111a35;
+      --edge: #2d4f88;
+      --text: #e8f1ff;
+      --muted: #9fb3d8;
+      --accent: #68c8ff;
+    }
+    body {
+      margin: 0;
+      font-family: Bahnschrift, "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top right, rgba(104, 200, 255, 0.2), transparent 35%), var(--bg);
+      min-height: 100vh;
+    }
+    .wrap {
+      width: min(840px, calc(100% - 32px));
+      margin: 24px auto;
+      border-radius: 16px;
+      border: 1px solid var(--edge);
+      background: linear-gradient(180deg, #18264a, #101a35);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 20px 40px rgba(0,0,0,0.35);
+      padding: 18px;
+    }
+    h1 { margin: 0 0 12px; letter-spacing: 0.06em; }
+    .sub { margin: 0 0 14px; color: var(--muted); }
+    .card {
+      border-radius: 14px;
+      border: 1px solid #345b99;
+      background: linear-gradient(180deg, #16284f, #101d3a);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.2);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    label { display: block; margin: 0 0 6px; color: var(--muted); }
+    input, select {
+      width: 100%;
+      min-height: 42px;
+      border-radius: 10px;
+      border: 1px solid #3a5f98;
+      background: #0c1530;
+      color: var(--text);
+      padding: 0 10px;
+      outline: none;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    button, .link-btn {
+      min-height: 40px;
+      border-radius: 10px;
+      border: 1px solid #4f80c8;
+      background: linear-gradient(180deg, #7fd3ff, #4ca8e8);
+      color: #06203b;
+      font-weight: 700;
+      padding: 0 12px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .ghost {
+      background: linear-gradient(180deg, #213d6f, #182f56);
+      color: #d9ecff;
+    }
+    .avatar {
+      width: 62px;
+      height: 62px;
+      border-radius: 999px;
+      border: 1px solid #4d79b8;
+      object-fit: cover;
+      background: #0a132b;
+    }
+    .avatar-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+    .status { margin-top: 8px; color: #9ff1be; }
+    @media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Settings</h1>
+    <p class="sub">Manage your profile and appearance.</p>
+
+    <div class="card">
+      <label for="usernameInput">Username</label>
+      <input id="usernameInput" type="text" maxlength="40" placeholder="Your display name" />
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="themeSelect">Theme</label>
+          <select id="themeSelect">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="emailInput" type="text" disabled />
+        </div>
+      </div>
+      <div class="btns">
+        <button id="saveProfileBtn" type="button">Save Profile</button>
+        <a class="link-btn ghost" href="/app">Back to Dashboard</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Profile Picture</label>
+      <div class="avatar-row">
+        <img id="avatarPreview" class="avatar" alt="Profile avatar" />
+        <input id="avatarInput" type="file" accept="image/png,image/jpeg,image/webp" />
+      </div>
+      <div class="btns">
+        <button id="uploadAvatarBtn" type="button">Upload Avatar</button>
+      </div>
+    </div>
+
+    <div id="statusText" class="status"></div>
+  </div>
+
+  <script>
+    const usernameInput = document.getElementById('usernameInput');
+    const themeSelect = document.getElementById('themeSelect');
+    const emailInput = document.getElementById('emailInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarInput = document.getElementById('avatarInput');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+    const statusText = document.getElementById('statusText');
+
+    let currentUser = null;
+
+    function setStatus(msg, ok = true) {
+      statusText.style.color = ok ? '#9ff1be' : '#ff9eb2';
+      statusText.textContent = msg;
+    }
+
+    async function loadMe() {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      if (!data.authenticated || !data.user) {
+        window.location.href = '/';
+        return;
+      }
+      currentUser = data.user;
+      usernameInput.value = data.user.username || '';
+      themeSelect.value = data.user.theme || 'dark';
+      emailInput.value = data.user.email || '';
+      avatarPreview.src = data.user.avatar_url || '/static/default-avatar.svg';
+    }
+
+    saveProfileBtn.addEventListener('click', async () => {
+      const fd = new FormData();
+      fd.append('username', String(usernameInput.value || '').trim());
+      fd.append('theme', String(themeSelect.value || 'dark'));
+      const res = await fetch('/api/auth/profile', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus(data.detail || 'Failed to save profile.', false);
+        return;
+      }
+      currentUser = data.user || currentUser;
+      setStatus('Profile updated.');
+    });
+
+    uploadAvatarBtn.addEventListener('click', async () => {
+      if (!avatarInput.files || avatarInput.files.length === 0) {
+        setStatus('Choose an image first.', false);
+        return;
+      }
+      const fd = new FormData();
+      fd.append('file', avatarInput.files[0]);
+      const res = await fetch('/api/auth/profile/avatar', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus(data.detail || 'Failed to upload avatar.', false);
+        return;
+      }
+      avatarPreview.src = data.avatar_url || avatarPreview.src;
+      setStatus('Avatar updated.');
+    });
+
+    loadMe();
+  </script>
+</body>
+</html>

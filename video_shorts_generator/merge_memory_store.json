@@ -1,0 +1,31 @@
+{
+  "sources": [
+    {
+      "id": "127ab30dcea44f93953c59d402565fdd",
+      "video1_name": "VID-20260224-WA0071.mp4",
+      "video2_name": "lv_0_20260224205654.mp4",
+      "video1_path": "E:\\MOVIES_CLIP_CHAMP\\video_shorts_generator\\merge_uploads\\127ab30dcea44f93953c59d402565fdd_1_VID-20260224-WA0071.mp4",
+      "video2_path": "E:\\MOVIES_CLIP_CHAMP\\video_shorts_generator\\merge_uploads\\127ab30dcea44f93953c59d402565fdd_2_lv_0_20260224205654.mp4",
+      "video1_duration_sec": 25.8,
+      "video2_duration_sec": 25.633,
+      "created_at": "2026-02-24T16:04:40Z",
+      "results": [
+        {
+          "name": "merged_f81aa6ac.mp4",
+          "url": "/merge_clips/merged_f81aa6ac.mp4",
+          "created_at": "2026-02-24T16:04:57Z"
+        },
+        {
+          "name": "merged_ba7c6324.mp4",
+          "url": "/merge_clips/merged_ba7c6324.mp4",
+          "created_at": "2026-02-24T16:07:43Z"
+        },
+        {
+          "name": "merged_05a297ab.mp4",
+          "url": "/merge_clips/merged_05a297ab.mp4",
+          "created_at": "2026-02-24T16:08:24Z"
+        }
+      ]
+    }
+  ]
+}
