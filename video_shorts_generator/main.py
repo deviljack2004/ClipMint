@@ -447,6 +447,43 @@ def _cleanup_expired_sessions() -> None:
 
 
 def _send_otp_email(email: str, otp_code: str) -> bool:
+    message_text = (
+        f"Your ClipMint verification code is: {otp_code}\n\n"
+        f"This code expires in {OTP_TTL_MINUTES} minutes."
+    )
+    delivery_errors: list[str] = []
+
+    brevo_api_key = os.getenv("BREVO_API_KEY", "").strip()
+    brevo_from_email = os.getenv("BREVO_FROM_EMAIL", "").strip()
+    brevo_from_name = os.getenv("BREVO_FROM_NAME", "ClipMint").strip() or "ClipMint"
+    if brevo_api_key and brevo_from_email:
+        payload = {
+            "sender": {"name": brevo_from_name, "email": brevo_from_email},
+            "to": [{"email": email}],
+            "subject": "ClipMint login verification code",
+            "textContent": message_text,
+        }
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=json.dumps(payload).encode("utf-8"),
+            method="POST",
+            headers={
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=20) as res:
+                if int(res.status) in {200, 201, 202}:
+                    return True
+                delivery_errors.append(f"Brevo returned status {res.status}")
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            delivery_errors.append(f"Brevo API error {exc.code}: {body}")
+        except Exception as exc:  # noqa: BLE001
+            delivery_errors.append(f"Brevo request failed: {exc}")
+
     resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
     resend_from = os.getenv("RESEND_FROM", "").strip()
 
@@ -455,10 +492,7 @@ def _send_otp_email(email: str, otp_code: str) -> bool:
             "from": resend_from,
             "to": [email],
             "subject": "ClipMint login verification code",
-            "text": (
-                f"Your ClipMint verification code is: {otp_code}\n\n"
-                f"This code expires in {OTP_TTL_MINUTES} minutes."
-            ),
+            "text": message_text,
         }
         req = urllib.request.Request(
             "https://api.resend.com/emails",
@@ -473,10 +507,12 @@ def _send_otp_email(email: str, otp_code: str) -> bool:
             with urllib.request.urlopen(req, timeout=20) as res:
                 if int(res.status) in {200, 201, 202}:
                     return True
-                raise RuntimeError(f"Resend returned status {res.status}")
+                delivery_errors.append(f"Resend returned status {res.status}")
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"Resend API error {exc.code}: {body}") from exc
+            delivery_errors.append(f"Resend API error {exc.code}: {body}")
+        except Exception as exc:  # noqa: BLE001
+            delivery_errors.append(f"Resend request failed: {exc}")
 
     host = os.getenv("SMTP_HOST", "").strip()
     port_raw = os.getenv("SMTP_PORT", "587").strip()
@@ -486,6 +522,8 @@ def _send_otp_email(email: str, otp_code: str) -> bool:
     use_tls = os.getenv("SMTP_USE_TLS", "true").strip().lower() in {"1", "true", "yes", "on"}
 
     if not host or not sender:
+        if delivery_errors:
+            raise RuntimeError("; ".join(delivery_errors))
         print(f"[AUTH] OTP for {email}: {otp_code}")
         return False
 
@@ -498,18 +536,19 @@ def _send_otp_email(email: str, otp_code: str) -> bool:
     msg["Subject"] = "ClipMint login verification code"
     msg["From"] = sender
     msg["To"] = email
-    msg.set_content(
-        f"Your ClipMint verification code is: {otp_code}\n\n"
-        f"This code expires in {OTP_TTL_MINUTES} minutes."
-    )
+    msg.set_content(message_text)
 
-    with smtplib.SMTP(host, port, timeout=20) as smtp:
-        if use_tls:
-            smtp.starttls()
-        if user and password:
-            smtp.login(user, password)
-        smtp.send_message(msg)
-    return True
+    try:
+        with smtplib.SMTP(host, port, timeout=20) as smtp:
+            if use_tls:
+                smtp.starttls()
+            if user and password:
+                smtp.login(user, password)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        delivery_errors.append(f"SMTP delivery failed: {exc}")
+        raise RuntimeError("; ".join(delivery_errors)) from exc
 
 
 def _issue_session(email: str) -> str:
