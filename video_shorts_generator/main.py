@@ -13,6 +13,8 @@ import subprocess
 import threading
 import uuid
 import hashlib
+import urllib.error
+import urllib.request
 from datetime import datetime, timedelta
 from email.message import EmailMessage
 from pathlib import Path
@@ -445,6 +447,37 @@ def _cleanup_expired_sessions() -> None:
 
 
 def _send_otp_email(email: str, otp_code: str) -> bool:
+    resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
+    resend_from = os.getenv("RESEND_FROM", "").strip()
+
+    if resend_api_key and resend_from:
+        payload = {
+            "from": resend_from,
+            "to": [email],
+            "subject": "ClipMint login verification code",
+            "text": (
+                f"Your ClipMint verification code is: {otp_code}\n\n"
+                f"This code expires in {OTP_TTL_MINUTES} minutes."
+            ),
+        }
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=json.dumps(payload).encode("utf-8"),
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=20) as res:
+                if int(res.status) in {200, 201, 202}:
+                    return True
+                raise RuntimeError(f"Resend returned status {res.status}")
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"Resend API error {exc.code}: {body}") from exc
+
     host = os.getenv("SMTP_HOST", "").strip()
     port_raw = os.getenv("SMTP_PORT", "587").strip()
     user = os.getenv("SMTP_USER", "").strip()
