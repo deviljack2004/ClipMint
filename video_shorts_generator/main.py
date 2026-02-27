@@ -134,6 +134,9 @@ ADMIN_SESSION_COOKIE_NAME = "clipmint_admin_session"
 ADMIN_SESSION_TTL_HOURS = int(os.getenv("ADMIN_SESSION_TTL_HOURS", "12"))
 ADMIN_PANEL_USERNAME = (os.getenv("ADMIN_PANEL_USERNAME", "admin") or "admin").strip()
 ADMIN_PANEL_PASSWORD = os.getenv("ADMIN_PANEL_PASSWORD", "").strip()
+FFMPEG_THREADS = max(1, int(os.getenv("FFMPEG_THREADS", "2")))
+MAX_RENDER_WORKERS = max(1, int(os.getenv("MAX_RENDER_WORKERS", "1")))
+ENABLE_HWACCEL = os.getenv("ENABLE_HWACCEL", "false").strip().lower() in {"1", "true", "yes", "on"}
 YT_DLP_PROGRESS_RE = re.compile(r"\[download\]\s+(\d+(?:\.\d+)?)%")
 ARIA2_PROGRESS_RE = re.compile(r"\((\d{1,3}(?:\.\d+)?)%\)")
 GENERIC_PROGRESS_RE = re.compile(r"(\d{1,3}(?:\.\d+)?)%")
@@ -1540,7 +1543,7 @@ def _video_codec_args() -> list[str]:
         "-pix_fmt",
         "yuv420p",
         "-threads",
-        "0",
+        str(FFMPEG_THREADS),
     ]
 
 
@@ -1556,7 +1559,7 @@ def _software_codec_args() -> list[str]:
         "-pix_fmt",
         "yuv420p",
         "-threads",
-        "0",
+        str(FFMPEG_THREADS),
     ]
 
 
@@ -1681,8 +1684,6 @@ def _render_segment(job_id: str, input_path: Path, overlay: dict, output_dir: Pa
     ffmpeg_cmd = [
         "ffmpeg",
         "-y",
-        "-hwaccel",
-        "auto",
         "-ss",
         str(start_time),
         "-i",
@@ -1709,6 +1710,8 @@ def _render_segment(job_id: str, input_path: Path, overlay: dict, output_dir: Pa
         "-nostats",
         str(output_path),
     ]
+    if ENABLE_HWACCEL:
+        ffmpeg_cmd[2:2] = ["-hwaccel", "auto"]
 
     try:
         process = subprocess.Popen(
@@ -1935,6 +1938,7 @@ def _process_video_job(
         else:
             cpu = max(1, os.cpu_count() or 2)
             workers = max(1, min(len(indices), max(2, cpu // 2)))
+        workers = max(1, min(workers, MAX_RENDER_WORKERS))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             futures = [
